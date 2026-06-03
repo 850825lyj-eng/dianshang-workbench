@@ -1,0 +1,45 @@
+:root {
+  --bg: #F5F7FA; --card: #FFFFFF; --text: #1E293B; --text2: #64748B;
+  --accent: #22C55E; --accent-light: #F0FDF4; --accent-hover: #16A34A;
+  --warn: #F59E0B; --warn-light: #FFFBEB;
+  --danger: #EF4444; --danger-light: #FEF2F2;
+  --info: #3B82F6; --info-light: #EFF6FF;
+  --border: #E2E8F0;
+  --btn-primary: linear-gradient(135deg, #22C55E, #16A34A);
+  --btn-hover: linear-gradient(135deg, #16A34A, #15803D);
+  --shadow: 0 1px 3px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+  --r: 24px; --r2: 16px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font-family:inherit}
+button{cursor:pointer;border:none;background:none}
+input[type="range"]{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;background:#E2E8F0}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid #fff;box-shadow:0 2px 8px rgba(34,197,94,.25)}
+.card{background:var(--card);border-radius:var(--r);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.btn{display:inline-block;padding:12px 28px;border-radius:30px;font-weight:700;font-size:15px;text-align:center;transition:all .25s cubic-bezier(.4,0,.2,1);text-shadow:0 1px 1px rgba(0,0,0,.06)}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.1)}
+.btn:active{transform:translateY(0);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.btn-primary{background:var(--btn-primary);color:#fff;box-shadow:0 4px 16px rgba(34,197,94,.25)}
+.btn-primary:hover{background:var(--btn-hover);box-shadow:0 8px 24px rgba(34,197,94,.35)}
+.btn-outline{background:#fff;border:1.5px solid var(--border);color:var(--text2);text-shadow:none}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:var(--danger);color:#fff;box-shadow:0 4px 16px rgba(239,68,68,.25)}
+.btn-danger:hover{background:#DC2626;box-shadow:0 8px 24px rgba(239,68,68,.35)}
+.upload-zone{border:2px dashed var(--border);border-radius:var(--r2);padding:36px 20px;text-align:center;cursor:pointer;background:#FAFBFC;transition:.2s}
+.upload-zone:hover{border-color:var(--accent);background:var(--accent-light)}
+.preview-thumb{display:block;max-width:100%;max-height:120px;width:auto;height:auto;border-radius:12px;margin:0 auto;object-fit:contain;border:none}
+/* Canvas 容器 */
+.canvas-wrapper{position:relative;display:flex;align-items:center;justify-content:center;min-height:400px;height:100%;overflow:auto}
+.canvas-wrapper canvas{max-width:100%;max-height:65vh;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.06);display:block;cursor:crosshair;touch-action:none}
+/* 画笔预览圈 */
+.brush-preview{position:absolute;border:2px dashed #22C55E;border-radius:50%;pointer-events:none;display:none;transform:translate(-50%,-50%);z-index:10}
+/* 模式切换按钮组 */
+.mode-group{display:flex;gap:4px;background:#fff;border-radius:32px;padding:4px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.mode-btn{padding:10px 24px;border-radius:28px;font-size:15px;font-weight:700;transition:all .25s cubic-bezier(.4,0,.2,1);color:var(--text2)}
+.mode-btn.active{background:var(--warn);color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.08)}
+/* 手机端 */
+@media(max-width:768px){
+  .mode-btn{padding:8px 16px;font-size:13px}
+  .canvas-wrapper{min-height:300px}
+}
