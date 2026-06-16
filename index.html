@@ -157,10 +157,12 @@
 
     .bg-gray-900 { background: var(--bg-card) !important; border-top: 1px solid var(--border-light); }
 
-    /* ===== 修复：首页大标题和“一键上架”标题在深色模式下背景浅色，文字需加深 ===== */
-    .main-headline,
+    /* ===== 修复文字颜色：首页大标题固定深色，一键上架标题跟随主题 ===== */
+    .main-headline {
+      color: #0F172A !important;  /* 首页大标题（浅色背景）固定深色 */
+    }
     .feature-headline {
-      color: #0F172A !important;  /* 强制深色，与浅色背景高对比 */
+      color: var(--color-text) !important;  /* 一键上架标题跟随主题，深色模式白，浅色模式黑 */
     }
   </style>
 </head>
@@ -351,7 +353,6 @@
           <h3 class="text-xl font-bold mb-2">智能裁剪</h3>
           <p class="text-gray-500 text-sm">自由裁剪或固定比例，裁掉多余区域。</p>
         </div>
-        <!-- 修改后的“一键上架”卡片：去掉橙色背景和NEW标签，外观与前面三个一致 -->
         <div class="p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
           <div class="text-4xl mb-4">📦</div>
           <h3 class="feature-headline text-xl font-bold mb-2">一键上架</h3>
