@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>修修图·电商工作台 | 拼图 · 打码 · 裁剪 · 一键上架</title>
-  <meta name="description" content="修修图电商工作台，聊天记录拼图、隐私打码、裁剪、一键生成全平台图片。纯本地处理。">
+  <meta name="description" content="修修图电商工作台，多图拼接、隐私打码、裁剪、一键上架全平台。纯本地处理。">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
@@ -37,11 +37,11 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
       line-height: 1.6;
       transition: background 0.25s, color 0.25s;
-      padding: 0 16px 40px; /* 底部安全内边距 */
+      padding: 0 16px 40px;
     }
     .container { max-width: 1200px; margin: 0 auto; padding: 20px 0; }
 
-    /* ---------- Header ---------- */
+    /* ---------- Header 中轴绝对对齐 ---------- */
     .navbar {
       display: flex;
       align-items: center;
@@ -80,7 +80,7 @@
     }
     .theme-toggle:hover { border-color: var(--color-primary); color: var(--color-primary); }
 
-    /* ---------- Banner（边距削减） ---------- */
+    /* ---------- Banner（精简） ---------- */
     .banner {
       text-align: center;
       padding: 14px 0 10px;
@@ -140,11 +140,12 @@
       cursor: pointer;
       transition: background 0.2s, border-color 0.2s;
       background: rgba(6, 182, 212, 0.02);
-      position: relative; /* 确保不遮盖canvas */
+      position: relative;
       z-index: 1;
     }
     .upload-zone:hover { border-color: var(--color-primary); background: rgba(6, 182, 212, 0.05); }
 
+    /* Canvas 容器 —— 确保层级独立 */
     .canvas-wrapper {
       margin-top: 16px;
       border-radius: 12px;
@@ -153,15 +154,15 @@
       background: #fff;
       max-height: 70vh;
       position: relative;
-      z-index: 10; /* 确保canvas容器在上层 */
+      z-index: 10;
     }
     .canvas-wrapper canvas {
       display: block;
       width: 100%;
       height: auto;
       position: relative;
-      z-index: 10; /* canvas本身也保持层级 */
-      cursor: default; /* 默认光标，由JS动态改变 */
+      z-index: 10;
+      cursor: default;
     }
 
     .thumb-list {
@@ -289,7 +290,7 @@
     .text-muted { color: var(--color-text-muted); }
     .text-secondary { color: var(--color-text-secondary); }
 
-    /* 画笔光标自定义圆形（跟随鼠标） */
+    /* 画笔光标 */
     #brushCursor {
       position: fixed;
       pointer-events: none;
@@ -436,7 +437,6 @@
           <div class="canvas-wrapper">
             <canvas id="mainCanvas"></canvas>
           </div>
-          <!-- 自定义画笔光标 -->
           <div id="brushCursor"></div>
         </div>
 
@@ -576,15 +576,15 @@
     })();
 
     // ================================================================
-    // 3. 核心状态与逻辑（多图拼接、打码、裁剪、撤销/清除）
+    // 3. 核心状态与算法
     // ================================================================
 
     // ---------- 全局状态 ----------
     let uploadedImages = [];          // 存储 { img, src, name }
-    let gap = 4;                      // 图片间距
-    let currentMode = 'preview';      // 'preview' | 'mosaic' | 'blur' | 'crop'
+    let gap = 4;
+    let currentMode = 'preview';
     let brushSize = 30;
-    let undoStack = [];              // 历史状态数据URL
+    let undoStack = [];
     let isDrawing = false;
     let lastPos = null;
     let cropRect = { x: 0, y: 0, w: 0, h: 0, ratio: 'free', dragging: false, startX: 0, startY: 0 };
@@ -630,7 +630,7 @@
       });
     });
 
-    // ---------- 多图垂直拼接 ----------
+    // ---------- 多图拼接（横向等比自适应，彻底消灭右侧黑底） ----------
     function performStitch() {
       if (uploadedImages.length === 0) {
         canvas.width = 0;
@@ -640,37 +640,39 @@
         return;
       }
 
-      // 计算总高度和最大宽度
+      // 1. 计算所有图片的最大宽度作为 canvas 宽度
+      const maxWidth = Math.max(...uploadedImages.map(item => item.img.width));
+      canvas.width = maxWidth;
+
+      // 2. 计算总高度（每张图按比例缩放）
       let totalHeight = 0;
-      let maxWidth = 0;
+      const scaledHeights = [];
       uploadedImages.forEach(item => {
-        totalHeight += item.img.height;
-        if (item.img.width > maxWidth) maxWidth = item.img.width;
+        const scale = maxWidth / item.img.width;
+        const targetHeight = item.img.height * scale;
+        scaledHeights.push(targetHeight);
+        totalHeight += targetHeight;
       });
       totalHeight += (uploadedImages.length - 1) * gap;
-
-      // 设置画布尺寸
-      canvas.width = maxWidth;
       canvas.height = totalHeight;
 
-      // 垂直拼接
+      // 3. 垂直拼接绘制（全部横向撑满）
       let yPos = 0;
-      uploadedImages.forEach(item => {
-        ctx.drawImage(item.img, 0, yPos, item.img.width, item.img.height);
-        yPos += item.img.height + gap;
+      uploadedImages.forEach((item, index) => {
+        const scale = maxWidth / item.img.width;
+        const targetHeight = item.img.height * scale;
+        ctx.drawImage(item.img, 0, yPos, maxWidth, targetHeight);
+        yPos += targetHeight + gap;
       });
 
-      // 保存初始状态到撤销栈
+      // 4. 保存初始状态到撤销栈
       undoStack.push(canvas.toDataURL());
 
-      // 更新缩略图
       updateThumbnails();
-
-      // 重置裁剪框
       resetCrop();
     }
 
-    // ---------- 缩略图渲染 ----------
+    // ---------- 缩略图 ----------
     function updateThumbnails() {
       thumbList.innerHTML = '';
       uploadedImages.forEach((item, index) => {
@@ -695,7 +697,6 @@
       if (index >= 0 && index < uploadedImages.length) {
         uploadedImages.splice(index, 1);
         performStitch();
-        // 重置撤销栈，保留初始状态
         undoStack = [];
         if (canvas.width > 0 && canvas.height > 0) {
           undoStack.push(canvas.toDataURL());
@@ -713,7 +714,6 @@
           img.onload = () => {
             uploadedImages.push({ img, src: e.target.result, name: f.name });
             performStitch();
-            // 重置撤销栈，保留初始状态
             undoStack = [];
             if (canvas.width > 0 && canvas.height > 0) {
               undoStack.push(canvas.toDataURL());
@@ -728,22 +728,21 @@
 
     // ---------- 撤销 ----------
     function undo() {
-      if (undoStack.length <= 1) return; // 至少保留初始状态
-      undoStack.pop(); // 移除当前状态
+      if (undoStack.length <= 1) return;
+      undoStack.pop();
       const prevState = undoStack[undoStack.length - 1];
       if (prevState) {
         const img = new Image();
         img.onload = () => {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           ctx.drawImage(img, 0, 0);
-          // 重置裁剪框（撤销后裁剪框重置）
           resetCrop();
         };
         img.src = prevState;
       }
     }
 
-    // ---------- 清除全部 ----------
+    // ---------- 清除 ----------
     function clearAll() {
       uploadedImages = [];
       canvas.width = 0;
@@ -752,11 +751,10 @@
       undoStack = [];
       updateThumbnails();
       resetCrop();
-      // 隐藏画笔光标
       brushCursor.style.display = 'none';
     }
 
-    // ---------- 裁剪相关 ----------
+    // ---------- 裁剪 ----------
     function resetCrop() {
       cropRect = { x: 0, y: 0, w: 0, h: 0, ratio: 'free', dragging: false, startX: 0, startY: 0 };
       if (canvas.width > 0 && canvas.height > 0) {
@@ -786,7 +784,12 @@
           ctx.setLineDash([6, 4]);
           ctx.strokeRect(x, y, w, h);
           ctx.setLineDash([]);
-          const corners = [[x, y], [x + w, y], [x, y + h], [x + w, y + h]];
+          const corners = [
+            [x, y],
+            [x + w, y],
+            [x, y + h],
+            [x + w, y + h]
+          ];
           corners.forEach(([cx, cy]) => {
             ctx.fillStyle = '#06B6D4';
             ctx.fillRect(cx - 4, cy - 4, 8, 8);
@@ -803,14 +806,39 @@
       canvas.width = w;
       canvas.height = h;
       ctx.putImageData(imageData, 0, 0);
-      // 更新撤销栈
       undoStack.pop();
       undoStack.push(canvas.toDataURL());
       resetCrop();
       setMode('preview');
     }
 
-    // ---------- 打码绘制（核心涂抹逻辑） ----------
+    // ---------- 马赛克（高性能局部离屏缩放） ----------
+    function applyMosaicAt(pos) {
+      const half = brushSize / 2;
+      const x = Math.max(0, pos.x - half);
+      const y = Math.max(0, pos.y - half);
+      const w = Math.min(brushSize, canvas.width - x);
+      const h = Math.min(brushSize, canvas.height - y);
+      if (w <= 0 || h <= 0) return;
+
+      // 1. 提取局部图像
+      const srcData = ctx.getImageData(x, y, w, h);
+
+      // 2. 创建离屏 canvas，进行缩放产生马赛克
+      const mosaicSize = Math.max(2, Math.floor(brushSize / 6)); // 颗粒大小
+      const offscreen = document.createElement('canvas');
+      offscreen.width = mosaicSize;
+      offscreen.height = Math.floor(mosaicSize * (h / w));
+      const offCtx = offscreen.getContext('2d');
+      offCtx.imageSmoothingEnabled = false;
+      offCtx.drawImage(canvas, x, y, w, h, 0, 0, offscreen.width, offscreen.height);
+
+      // 3. 将颗粒化图像放大回原区域（产生马赛克）
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(offscreen, x, y, w, h);
+    }
+
+    // ---------- 绘制事件（统一使用局部马赛克） ----------
     function startDraw(e) {
       e.preventDefault();
       if (currentMode === 'preview') return;
@@ -840,11 +868,24 @@
         }
         return;
       }
-      // 打码模式
+
+      // 打码模式（马赛克/模糊/纯色）
       const pos = getCanvasPos(e);
       isDrawing = true;
       lastPos = pos;
-      drawStroke(pos);
+      // 如果马赛克模式，直接调用局部马赛克算法
+      if (currentMode === 'mosaic') {
+        applyMosaicAt(pos);
+        // 马赛克绘制后立即保存状态到栈（在 endDraw 中统一保存）
+      } else if (currentMode === 'blur') {
+        // 模糊采用传统方式（但仅操作局部，不是全画布，性能可接受）
+        applyBlurAt(pos);
+      } else if (currentMode === 'solid') {
+        ctx.fillStyle = '#333333';
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, brushSize / 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
 
     function moveDraw(e) {
@@ -883,7 +924,16 @@
           const t = i / steps;
           const x = lastPos.x + (pos.x - lastPos.x) * t;
           const y = lastPos.y + (pos.y - lastPos.y) * t;
-          drawStroke({ x, y });
+          if (currentMode === 'mosaic') {
+            applyMosaicAt({ x, y });
+          } else if (currentMode === 'blur') {
+            applyBlurAt({ x, y });
+          } else if (currentMode === 'solid') {
+            ctx.fillStyle = '#333333';
+            ctx.beginPath();
+            ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
         }
         lastPos = pos;
         drawOverlay();
@@ -906,92 +956,47 @@
       }
     }
 
-    function drawStroke(pos) {
-      if (currentMode === 'mosaic') {
-        const size = brushSize;
-        const x = Math.max(0, pos.x - size);
-        const y = Math.max(0, pos.y - size);
-        const w = Math.min(size * 2, canvas.width - x);
-        const h = Math.min(size * 2, canvas.height - y);
-        if (w <= 0 || h <= 0) return;
-        const imageData = ctx.getImageData(x, y, w, h);
-        const data = imageData.data;
-        const block = Math.max(4, Math.floor(size / 3));
-        for (let by = 0; by < h; by += block) {
-          for (let bx = 0; bx < w; bx += block) {
-            let r = 0,
-              g = 0,
-              b = 0,
-              count = 0;
-            for (let dy = 0; dy < block && by + dy < h; dy++) {
-              for (let dx = 0; dx < block && bx + dx < w; dx++) {
-                const idx = ((by + dy) * w + (bx + dx)) * 4;
+    // ---------- 模糊（局部） ----------
+    function applyBlurAt(pos) {
+      const half = brushSize / 2;
+      const x = Math.max(0, pos.x - half);
+      const y = Math.max(0, pos.y - half);
+      const w = Math.min(brushSize, canvas.width - x);
+      const h = Math.min(brushSize, canvas.height - y);
+      if (w <= 0 || h <= 0) return;
+      const imageData = ctx.getImageData(x, y, w, h);
+      const data = imageData.data;
+      const radius = Math.max(1, Math.floor(brushSize / 20));
+      const temp = new Uint8ClampedArray(data);
+      for (let py = 0; py < h; py++) {
+        for (let px = 0; px < w; px++) {
+          let r = 0,
+            g = 0,
+            b = 0,
+            count = 0;
+          for (let dy = -radius; dy <= radius; dy++) {
+            for (let dx = -radius; dx <= radius; dx++) {
+              const nx = px + dx,
+                ny = py + dy;
+              if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
+                const idx = (ny * w + nx) * 4;
                 r += data[idx];
                 g += data[idx + 1];
                 b += data[idx + 2];
                 count++;
               }
             }
-            r = Math.round(r / count);
-            g = Math.round(g / count);
-            b = Math.round(b / count);
-            for (let dy = 0; dy < block && by + dy < h; dy++) {
-              for (let dx = 0; dx < block && bx + dx < w; dx++) {
-                const idx = ((by + dy) * w + (bx + dx)) * 4;
-                data[idx] = r;
-                data[idx + 1] = g;
-                data[idx + 2] = b;
-              }
-            }
           }
+          const idx = (py * w + px) * 4;
+          temp[idx] = r / count;
+          temp[idx + 1] = g / count;
+          temp[idx + 2] = b / count;
         }
-        ctx.putImageData(imageData, x, y);
-      } else if (currentMode === 'blur') {
-        const size = brushSize;
-        const x = Math.max(0, pos.x - size);
-        const y = Math.max(0, pos.y - size);
-        const w = Math.min(size * 2, canvas.width - x);
-        const h = Math.min(size * 2, canvas.height - y);
-        if (w <= 0 || h <= 0) return;
-        const imageData = ctx.getImageData(x, y, w, h);
-        const data = imageData.data;
-        const radius = Math.max(2, Math.floor(size / 10));
-        const temp = new Uint8ClampedArray(data);
-        for (let py = 0; py < h; py++) {
-          for (let px = 0; px < w; px++) {
-            let r = 0,
-              g = 0,
-              b = 0,
-              count = 0;
-            for (let dy = -radius; dy <= radius; dy++) {
-              for (let dx = -radius; dx <= radius; dx++) {
-                const nx = px + dx,
-                  ny = py + dy;
-                if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
-                  const idx = (ny * w + nx) * 4;
-                  r += data[idx];
-                  g += data[idx + 1];
-                  b += data[idx + 2];
-                  count++;
-                }
-              }
-            }
-            const idx = (py * w + px) * 4;
-            temp[idx] = r / count;
-            temp[idx + 1] = g / count;
-            temp[idx + 2] = b / count;
-          }
-        }
-        ctx.putImageData(new ImageData(temp, w, h), x, y);
-      } else if (currentMode === 'solid') {
-        ctx.fillStyle = '#333333';
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, brushSize, 0, Math.PI * 2);
-        ctx.fill();
       }
+      ctx.putImageData(new ImageData(temp, w, h), x, y);
     }
 
-    // ---------- 获取画布坐标 ----------
+    // ---------- 辅助 ----------
     function getCanvasPos(e) {
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
@@ -1016,7 +1021,6 @@
       modeBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
       brushGroup.style.display = (mode === 'preview' || mode === 'crop') ? 'none' : 'flex';
       cropRatioPanel.style.display = (mode === 'crop') ? 'block' : 'none';
-      // 设置光标样式
       if (mode === 'preview') {
         canvas.style.cursor = 'default';
         brushCursor.style.display = 'none';
@@ -1024,12 +1028,11 @@
         canvas.style.cursor = 'crosshair';
         brushCursor.style.display = 'none';
       } else {
-        canvas.style.cursor = 'none';
+        canvas.style.cursor = 'crosshair';
         brushCursor.style.display = 'block';
-        brushCursor.style.width = brushSize * 2 + 'px';
-        brushCursor.style.height = brushSize * 2 + 'px';
+        brushCursor.style.width = brushSize + 'px';
+        brushCursor.style.height = brushSize + 'px';
       }
-      // 如果切换到裁剪模式，初始化裁剪框
       if (mode === 'crop' && canvas.width > 0 && cropRect.w === 0) {
         cropRect.x = 0;
         cropRect.y = 0;
@@ -1045,7 +1048,6 @@
         alert('请先上传图片！');
         return;
       }
-      // VIP 检查
       const isVIP = localStorage.getItem('xiuxiutu_vip') === 'true';
       if (!isVIP) {
         let count = parseInt(localStorage.getItem('xiuxiutu_exportCount') || '0');
@@ -1068,8 +1070,7 @@
       }, format, quality);
     }
 
-    // ---------- 事件绑定（钢铁级穿透） ----------
-    // 文件上传
+    // ---------- 事件绑定 ----------
     fileInput.addEventListener('change', function() {
       if (this.files) loadImageFiles(this.files);
       this.value = '';
@@ -1084,13 +1085,11 @@
       if (e.dataTransfer.files) loadImageFiles(e.dataTransfer.files);
     });
 
-    // 间距滑块
     gapSlider.addEventListener('input', function() {
       gap = parseInt(this.value);
       gapLabel.textContent = gap + 'px';
       if (uploadedImages.length > 0) {
         performStitch();
-        // 重置撤销栈
         undoStack = [];
         undoStack.push(canvas.toDataURL());
         resetCrop();
@@ -1098,24 +1097,21 @@
       }
     });
 
-    // 画笔大小滑块
     brushSlider.addEventListener('input', function() {
       brushSize = parseInt(this.value);
       brushLabel.textContent = brushSize;
       if (currentMode !== 'preview' && currentMode !== 'crop') {
-        brushCursor.style.width = brushSize * 2 + 'px';
-        brushCursor.style.height = brushSize * 2 + 'px';
+        brushCursor.style.width = brushSize + 'px';
+        brushCursor.style.height = brushSize + 'px';
       }
     });
 
-    // 模式切换按钮
     modeBtns.forEach(btn => {
       btn.addEventListener('click', function() {
         setMode(this.dataset.mode);
       });
     });
 
-    // 裁剪比例按钮
     cropRatioBtns.forEach(btn => {
       btn.addEventListener('click', function() {
         cropRatioBtns.forEach(b => b.classList.remove('active'));
@@ -1146,7 +1142,6 @@
     // ----- Canvas 交互事件（保证穿透） -----
     canvas.addEventListener('mousedown', startDraw);
     canvas.addEventListener('mousemove', (e) => {
-      // 更新画笔光标位置
       if (currentMode !== 'preview' && currentMode !== 'crop') {
         brushCursor.style.left = e.clientX + 'px';
         brushCursor.style.top = e.clientY + 'px';
@@ -1156,7 +1151,6 @@
     canvas.addEventListener('mouseup', endDraw);
     canvas.addEventListener('mouseleave', endDraw);
 
-    // 移动端事件
     canvas.addEventListener('touchstart', startDraw, { passive: false });
     canvas.addEventListener('touchmove', (e) => {
       if (currentMode !== 'preview' && currentMode !== 'crop') {
@@ -1168,16 +1162,15 @@
     }, { passive: false });
     canvas.addEventListener('touchend', endDraw);
 
-    // 撤销、清除、导出
     undoBtn.addEventListener('click', undo);
     clearBtn.addEventListener('click', clearAll);
     exportBtn.addEventListener('click', exportImage);
 
-    // 初始化模式
+    // 初始化
     setMode('preview');
 
     // ================================================================
-    // 4. 一键上架（保留完整）
+    // 4. 一键上架（完整保留）
     // ================================================================
     const listingUploadZone = document.getElementById('listingUploadZone');
     const listingFileInput = document.getElementById('listingFileInput');
@@ -1309,7 +1302,7 @@
 
     updateListingExportBtn();
 
-    console.log('✅ 修修图 · 电商工作台 核心逻辑已强制灌注！');
+    console.log('✅ 修修图 · 电商工作台 最终算法交割版已加载！');
   </script>
 </body>
 </html>
