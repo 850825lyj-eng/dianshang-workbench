@@ -37,7 +37,7 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
       line-height: 1.6;
       transition: background 0.25s, color 0.25s;
-      padding: 0 16px;
+      padding: 0 16px 40px; /* 底部安全内边距，让版权信息不贴边 */
     }
     .container { max-width: 1200px; margin: 0 auto; padding: 20px 0; }
 
@@ -80,10 +80,10 @@
     }
     .theme-toggle:hover { border-color: var(--color-primary); color: var(--color-primary); }
 
-    /* ---------- Banner（精简文字） ---------- */
+    /* ---------- Banner（削减上下边距50%） ---------- */
     .banner {
       text-align: center;
-      padding: 28px 0 20px;
+      padding: 14px 0 10px;  /* 原 28px 20px，削减约50% */
     }
     .banner h1 {
       font-size: 2.2rem;
@@ -91,12 +91,13 @@
       color: var(--color-text);
       letter-spacing: -0.5px;
       line-height: 1.2;
+      margin-bottom: 4px; /* 新增，微调下方间距 */
     }
     .banner h1 span { color: var(--color-primary); }
     .banner p {
       color: var(--color-text-secondary);
       max-width: 500px;
-      margin: 8px auto 0;
+      margin: 4px auto 0;
       font-size: 1rem;
     }
 
@@ -256,7 +257,7 @@
 
     .footer {
       text-align: center;
-      padding: 24px 0;
+      padding: 24px 0 8px;   /* 底部增加一点内边距，配合 body 的 padding-bottom */
       border-top: 1px solid var(--border-light);
       color: var(--color-text-muted);
       font-size: 0.85rem;
@@ -335,7 +336,7 @@
   <!-- ========== 主容器 ========== -->
   <div class="container">
 
-    <!-- Banner（精简文字） -->
+    <!-- Banner（边距已削减） -->
     <section id="home" class="banner">
       <h1>电商图片 <span>一站式处理</span></h1>
       <p>多图拼接 · 隐私打码 · 智能裁剪 · 一键上架全平台</p>
@@ -598,7 +599,7 @@
       });
     });
 
-    // ---------- 拼接 ----------
+    // ---------- 拼接（多图垂直长图） ----------
     function performStitch() {
       if (uploadedImages.length === 0) {
         canvas.width = 0; canvas.height = 0; ctx.clearRect(0,0,0,0);
@@ -670,7 +671,7 @@
       fileInput.value = '';
     }
 
-    // ---------- 撤销 ----------
+    // ---------- 撤销（历史状态栈） ----------
     function undo() {
       if (undoStack.length <= 1) return;
       undoStack.pop();
@@ -686,7 +687,7 @@
       }
     }
 
-    // ---------- 清除全部 ----------
+    // ---------- 清除全部（重置画布） ----------
     function clearAll() {
       uploadedImages = [];
       canvas.width = 0; canvas.height = 0;
@@ -758,6 +759,7 @@
           cropRect.startX = pos.x; cropRect.startY = pos.y;
           if (pos.x >= cropRect.x && pos.x <= cropRect.x + cropRect.w &&
               pos.y >= cropRect.y && pos.y <= cropRect.y + cropRect.h) {
+            // 拖拽整个框
           } else {
             cropRect.x = pos.x; cropRect.y = pos.y; cropRect.w = 0; cropRect.h = 0;
           }
@@ -1138,7 +1140,7 @@
 
     updateListingExportBtn();
 
-    console.log('✅ 修修图 · 电商工作台 精简文字版已加载！');
+    console.log('✅ 修修图 · 电商工作台 最终交割版已加载！');
   </script>
 </body>
 </html>
