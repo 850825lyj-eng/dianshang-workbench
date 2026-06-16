@@ -157,10 +157,10 @@
 
     .bg-gray-900 { background: var(--bg-card) !important; border-top: 1px solid var(--border-light); }
 
-    /* ===== 增强修复：强制首页大标题和“一键上架”标题使用主题色（最高优先级） ===== */
+    /* ===== 修复：首页大标题和“一键上架”标题在深色模式下背景浅色，文字需加深 ===== */
     .main-headline,
     .feature-headline {
-      color: var(--color-text) !important;
+      color: #0F172A !important;  /* 强制深色，与浅色背景高对比 */
     }
   </style>
 </head>
