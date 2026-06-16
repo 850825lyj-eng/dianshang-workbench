@@ -37,7 +37,7 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
       line-height: 1.6;
       transition: background 0.25s, color 0.25s;
-      padding: 0 16px 40px; /* 底部安全内边距，让版权信息不贴边 */
+      padding: 0 16px 40px; /* 底部安全内边距 */
     }
     .container { max-width: 1200px; margin: 0 auto; padding: 20px 0; }
 
@@ -80,10 +80,10 @@
     }
     .theme-toggle:hover { border-color: var(--color-primary); color: var(--color-primary); }
 
-    /* ---------- Banner（削减上下边距50%） ---------- */
+    /* ---------- Banner（边距削减） ---------- */
     .banner {
       text-align: center;
-      padding: 14px 0 10px;  /* 原 28px 20px，削减约50% */
+      padding: 14px 0 10px;
     }
     .banner h1 {
       font-size: 2.2rem;
@@ -91,7 +91,7 @@
       color: var(--color-text);
       letter-spacing: -0.5px;
       line-height: 1.2;
-      margin-bottom: 4px; /* 新增，微调下方间距 */
+      margin-bottom: 4px;
     }
     .banner h1 span { color: var(--color-primary); }
     .banner p {
@@ -140,6 +140,8 @@
       cursor: pointer;
       transition: background 0.2s, border-color 0.2s;
       background: rgba(6, 182, 212, 0.02);
+      position: relative; /* 确保不遮盖canvas */
+      z-index: 1;
     }
     .upload-zone:hover { border-color: var(--color-primary); background: rgba(6, 182, 212, 0.05); }
 
@@ -150,8 +152,17 @@
       border: 1px solid var(--border-light);
       background: #fff;
       max-height: 70vh;
+      position: relative;
+      z-index: 10; /* 确保canvas容器在上层 */
     }
-    .canvas-wrapper canvas { display: block; width: 100%; height: auto; }
+    .canvas-wrapper canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      position: relative;
+      z-index: 10; /* canvas本身也保持层级 */
+      cursor: default; /* 默认光标，由JS动态改变 */
+    }
 
     .thumb-list {
       display: flex;
@@ -243,7 +254,7 @@
     .vip-modal p { color: var(--color-text-secondary); margin-bottom: 24px; }
     .vip-modal .btn { width: 100%; justify-content: center; }
 
-    /* 底部功能卡片（精简描述） */
+    /* 底部功能卡片 */
     .features-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -257,7 +268,7 @@
 
     .footer {
       text-align: center;
-      padding: 24px 0 8px;   /* 底部增加一点内边距，配合 body 的 padding-bottom */
+      padding: 24px 0 8px;
       border-top: 1px solid var(--border-light);
       color: var(--color-text-muted);
       font-size: 0.85rem;
@@ -277,6 +288,19 @@
     .text-center { text-align: center; }
     .text-muted { color: var(--color-text-muted); }
     .text-secondary { color: var(--color-text-secondary); }
+
+    /* 画笔光标自定义圆形（跟随鼠标） */
+    #brushCursor {
+      position: fixed;
+      pointer-events: none;
+      border: 2px solid var(--color-primary);
+      border-radius: 50%;
+      background: rgba(6, 182, 212, 0.1);
+      z-index: 1000;
+      display: none;
+      transform: translate(-50%, -50%);
+      transition: width 0.1s, height 0.1s;
+    }
   </style>
 </head>
 <body>
@@ -336,7 +360,7 @@
   <!-- ========== 主容器 ========== -->
   <div class="container">
 
-    <!-- Banner（边距已削减） -->
+    <!-- Banner -->
     <section id="home" class="banner">
       <h1>电商图片 <span>一站式处理</span></h1>
       <p>多图拼接 · 隐私打码 · 智能裁剪 · 一键上架全平台</p>
@@ -408,9 +432,12 @@
             </div>
           </div>
 
+          <!-- Canvas 容器 -->
           <div class="canvas-wrapper">
             <canvas id="mainCanvas"></canvas>
           </div>
+          <!-- 自定义画笔光标 -->
+          <div id="brushCursor"></div>
         </div>
 
         <!-- 一键上架 -->
@@ -470,7 +497,7 @@
       </div>
     </section>
 
-    <!-- ========== 功能卡片（精简） ========== -->
+    <!-- ========== 功能卡片 ========== -->
     <section id="features" style="padding: 20px 0;">
       <h2 style="font-size:1.6rem; font-weight:700; text-align:center; color:var(--color-text);">核心功能</h2>
       <div class="features-grid">
@@ -527,7 +554,7 @@
     })();
 
     // ================================================================
-    // 2. VIP 计费墙
+    // 2. VIP 计费墙（导出次数限制）
     // ================================================================
     (function initVIP() {
       const isVIP = localStorage.getItem('xiuxiutu_vip') === 'true';
@@ -551,18 +578,21 @@
     // ================================================================
     // 3. 核心状态与逻辑（多图拼接、打码、裁剪、撤销/清除）
     // ================================================================
-    let uploadedImages = [];
-    let gap = 4;
-    let currentMode = 'preview';
+
+    // ---------- 全局状态 ----------
+    let uploadedImages = [];          // 存储 { img, src, name }
+    let gap = 4;                      // 图片间距
+    let currentMode = 'preview';      // 'preview' | 'mosaic' | 'blur' | 'crop'
     let brushSize = 30;
-    let undoStack = [];
+    let undoStack = [];              // 历史状态数据URL
     let isDrawing = false;
     let lastPos = null;
     let cropRect = { x: 0, y: 0, w: 0, h: 0, ratio: 'free', dragging: false, startX: 0, startY: 0 };
 
-    // DOM 引用
+    // DOM 元素
     const canvas = document.getElementById('mainCanvas');
     const ctx = canvas.getContext('2d');
+    const canvasWrapper = document.querySelector('.canvas-wrapper');
     const fileInput = document.getElementById('fileInput');
     const uploadZone = document.getElementById('uploadZone');
     const thumbList = document.getElementById('thumbList');
@@ -580,6 +610,7 @@
     const clearBtn = document.getElementById('clearBtn');
     const exportBtn = document.getElementById('exportBtn');
     const exportFormat = document.getElementById('exportFormat');
+    const brushCursor = document.getElementById('brushCursor');
     const toolTabs = document.querySelectorAll('.tool-tab');
     const toolStitch = document.getElementById('toolStitch');
     const toolListing = document.getElementById('toolListing');
@@ -599,29 +630,47 @@
       });
     });
 
-    // ---------- 拼接（多图垂直长图） ----------
+    // ---------- 多图垂直拼接 ----------
     function performStitch() {
       if (uploadedImages.length === 0) {
-        canvas.width = 0; canvas.height = 0; ctx.clearRect(0,0,0,0);
+        canvas.width = 0;
+        canvas.height = 0;
+        ctx.clearRect(0, 0, 0, 0);
+        updateThumbnails();
         return;
       }
-      let totalHeight = 0, maxWidth = 0;
-      uploadedImages.forEach(item => { totalHeight += item.img.height; if (item.img.width > maxWidth) maxWidth = item.img.width; });
+
+      // 计算总高度和最大宽度
+      let totalHeight = 0;
+      let maxWidth = 0;
+      uploadedImages.forEach(item => {
+        totalHeight += item.img.height;
+        if (item.img.width > maxWidth) maxWidth = item.img.width;
+      });
       totalHeight += (uploadedImages.length - 1) * gap;
 
+      // 设置画布尺寸
       canvas.width = maxWidth;
       canvas.height = totalHeight;
+
+      // 垂直拼接
       let yPos = 0;
       uploadedImages.forEach(item => {
         ctx.drawImage(item.img, 0, yPos, item.img.width, item.img.height);
         yPos += item.img.height + gap;
       });
+
+      // 保存初始状态到撤销栈
       undoStack.push(canvas.toDataURL());
+
+      // 更新缩略图
       updateThumbnails();
+
+      // 重置裁剪框
       resetCrop();
     }
 
-    // ---------- 缩略图 ----------
+    // ---------- 缩略图渲染 ----------
     function updateThumbnails() {
       thumbList.innerHTML = '';
       uploadedImages.forEach((item, index) => {
@@ -646,8 +695,11 @@
       if (index >= 0 && index < uploadedImages.length) {
         uploadedImages.splice(index, 1);
         performStitch();
+        // 重置撤销栈，保留初始状态
         undoStack = [];
-        undoStack.push(canvas.toDataURL());
+        if (canvas.width > 0 && canvas.height > 0) {
+          undoStack.push(canvas.toDataURL());
+        }
       }
     }
 
@@ -661,8 +713,11 @@
           img.onload = () => {
             uploadedImages.push({ img, src: e.target.result, name: f.name });
             performStitch();
+            // 重置撤销栈，保留初始状态
             undoStack = [];
-            undoStack.push(canvas.toDataURL());
+            if (canvas.width > 0 && canvas.height > 0) {
+              undoStack.push(canvas.toDataURL());
+            }
           };
           img.src = e.target.result;
         };
@@ -671,33 +726,37 @@
       fileInput.value = '';
     }
 
-    // ---------- 撤销（历史状态栈） ----------
+    // ---------- 撤销 ----------
     function undo() {
-      if (undoStack.length <= 1) return;
-      undoStack.pop();
-      const prev = undoStack[undoStack.length - 1];
-      if (prev) {
+      if (undoStack.length <= 1) return; // 至少保留初始状态
+      undoStack.pop(); // 移除当前状态
+      const prevState = undoStack[undoStack.length - 1];
+      if (prevState) {
         const img = new Image();
         img.onload = () => {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           ctx.drawImage(img, 0, 0);
+          // 重置裁剪框（撤销后裁剪框重置）
           resetCrop();
         };
-        img.src = prev;
+        img.src = prevState;
       }
     }
 
-    // ---------- 清除全部（重置画布） ----------
+    // ---------- 清除全部 ----------
     function clearAll() {
       uploadedImages = [];
-      canvas.width = 0; canvas.height = 0;
-      ctx.clearRect(0,0,0,0);
+      canvas.width = 0;
+      canvas.height = 0;
+      ctx.clearRect(0, 0, 0, 0);
       undoStack = [];
       updateThumbnails();
       resetCrop();
+      // 隐藏画笔光标
+      brushCursor.style.display = 'none';
     }
 
-    // ---------- 裁剪 ----------
+    // ---------- 裁剪相关 ----------
     function resetCrop() {
       cropRect = { x: 0, y: 0, w: 0, h: 0, ratio: 'free', dragging: false, startX: 0, startY: 0 };
       if (canvas.width > 0 && canvas.height > 0) {
@@ -709,8 +768,8 @@
 
     function drawOverlay() {
       if (undoStack.length === 0) return;
-      const current = undoStack[undoStack.length - 1];
-      if (!current) return;
+      const currentState = undoStack[undoStack.length - 1];
+      if (!currentState) return;
       const img = new Image();
       img.onload = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -727,50 +786,61 @@
           ctx.setLineDash([6, 4]);
           ctx.strokeRect(x, y, w, h);
           ctx.setLineDash([]);
-          const corners = [[x,y],[x+w,y],[x,y+h],[x+w,y+h]];
-          corners.forEach(([cx,cy]) => {
+          const corners = [[x, y], [x + w, y], [x, y + h], [x + w, y + h]];
+          corners.forEach(([cx, cy]) => {
             ctx.fillStyle = '#06B6D4';
-            ctx.fillRect(cx-4, cy-4, 8, 8);
+            ctx.fillRect(cx - 4, cy - 4, 8, 8);
           });
         }
       };
-      img.src = current;
+      img.src = currentState;
     }
 
     function applyCrop() {
       if (cropRect.w < 10 || cropRect.h < 10) return;
       const { x, y, w, h } = cropRect;
       const imageData = ctx.getImageData(x, y, w, h);
-      canvas.width = w; canvas.height = h;
+      canvas.width = w;
+      canvas.height = h;
       ctx.putImageData(imageData, 0, 0);
+      // 更新撤销栈
       undoStack.pop();
       undoStack.push(canvas.toDataURL());
       resetCrop();
       setMode('preview');
     }
 
-    // ---------- 打码绘制 ----------
+    // ---------- 打码绘制（核心涂抹逻辑） ----------
     function startDraw(e) {
+      e.preventDefault();
       if (currentMode === 'preview') return;
       if (currentMode === 'crop') {
         const pos = getCanvasPos(e);
         if (cropRect.w > 0 && cropRect.h > 0) {
           cropRect.dragging = true;
-          cropRect.startX = pos.x; cropRect.startY = pos.y;
+          cropRect.startX = pos.x;
+          cropRect.startY = pos.y;
           if (pos.x >= cropRect.x && pos.x <= cropRect.x + cropRect.w &&
-              pos.y >= cropRect.y && pos.y <= cropRect.y + cropRect.h) {
+            pos.y >= cropRect.y && pos.y <= cropRect.y + cropRect.h) {
             // 拖拽整个框
           } else {
-            cropRect.x = pos.x; cropRect.y = pos.y; cropRect.w = 0; cropRect.h = 0;
+            cropRect.x = pos.x;
+            cropRect.y = pos.y;
+            cropRect.w = 0;
+            cropRect.h = 0;
           }
         } else {
-          cropRect.x = pos.x; cropRect.y = pos.y; cropRect.w = 0; cropRect.h = 0;
+          cropRect.x = pos.x;
+          cropRect.y = pos.y;
+          cropRect.w = 0;
+          cropRect.h = 0;
           cropRect.dragging = true;
-          cropRect.startX = pos.x; cropRect.startY = pos.y;
+          cropRect.startX = pos.x;
+          cropRect.startY = pos.y;
         }
         return;
       }
-      e.preventDefault();
+      // 打码模式
       const pos = getCanvasPos(e);
       isDrawing = true;
       lastPos = pos;
@@ -778,6 +848,7 @@
     }
 
     function moveDraw(e) {
+      e.preventDefault();
       if (currentMode === 'preview') return;
       if (currentMode === 'crop') {
         if (!cropRect.dragging) return;
@@ -793,7 +864,8 @@
           else h = w / target;
           const cx = (cropRect.startX + pos.x) / 2;
           const cy = (cropRect.startY + pos.y) / 2;
-          x = cx - w/2; y = cy - h/2;
+          x = cx - w / 2;
+          y = cy - h / 2;
         }
         cropRect.x = Math.max(0, x);
         cropRect.y = Math.max(0, y);
@@ -803,7 +875,6 @@
         return;
       }
       if (!isDrawing || !lastPos) return;
-      e.preventDefault();
       const pos = getCanvasPos(e);
       const dist = Math.hypot(pos.x - lastPos.x, pos.y - lastPos.y);
       if (dist > 2) {
@@ -820,11 +891,17 @@
     }
 
     function endDraw(e) {
-      if (currentMode === 'crop') { cropRect.dragging = false; return; }
+      if (currentMode === 'crop') {
+        cropRect.dragging = false;
+        return;
+      }
       if (isDrawing) {
         isDrawing = false;
-        undoStack.push(canvas.toDataURL());
-        if (undoStack.length > 30) undoStack.shift();
+        // 每次绘制结束，保存状态到撤销栈
+        if (canvas.width > 0 && canvas.height > 0) {
+          undoStack.push(canvas.toDataURL());
+          if (undoStack.length > 30) undoStack.shift();
+        }
         drawOverlay();
       }
     }
@@ -842,18 +919,28 @@
         const block = Math.max(4, Math.floor(size / 3));
         for (let by = 0; by < h; by += block) {
           for (let bx = 0; bx < w; bx += block) {
-            let r = 0, g = 0, b = 0, count = 0;
-            for (let dy = 0; dy < block && by+dy < h; dy++) {
-              for (let dx = 0; dx < block && bx+dx < w; dx++) {
-                const idx = ((by+dy) * w + (bx+dx)) * 4;
-                r += data[idx]; g += data[idx+1]; b += data[idx+2]; count++;
+            let r = 0,
+              g = 0,
+              b = 0,
+              count = 0;
+            for (let dy = 0; dy < block && by + dy < h; dy++) {
+              for (let dx = 0; dx < block && bx + dx < w; dx++) {
+                const idx = ((by + dy) * w + (bx + dx)) * 4;
+                r += data[idx];
+                g += data[idx + 1];
+                b += data[idx + 2];
+                count++;
               }
             }
-            r = Math.round(r/count); g = Math.round(g/count); b = Math.round(b/count);
-            for (let dy = 0; dy < block && by+dy < h; dy++) {
-              for (let dx = 0; dx < block && bx+dx < w; dx++) {
-                const idx = ((by+dy) * w + (bx+dx)) * 4;
-                data[idx] = r; data[idx+1] = g; data[idx+2] = b;
+            r = Math.round(r / count);
+            g = Math.round(g / count);
+            b = Math.round(b / count);
+            for (let dy = 0; dy < block && by + dy < h; dy++) {
+              for (let dx = 0; dx < block && bx + dx < w; dx++) {
+                const idx = ((by + dy) * w + (bx + dx)) * 4;
+                data[idx] = r;
+                data[idx + 1] = g;
+                data[idx + 2] = b;
               }
             }
           }
@@ -872,18 +959,27 @@
         const temp = new Uint8ClampedArray(data);
         for (let py = 0; py < h; py++) {
           for (let px = 0; px < w; px++) {
-            let r = 0, g = 0, b = 0, count = 0;
+            let r = 0,
+              g = 0,
+              b = 0,
+              count = 0;
             for (let dy = -radius; dy <= radius; dy++) {
               for (let dx = -radius; dx <= radius; dx++) {
-                const nx = px + dx, ny = py + dy;
+                const nx = px + dx,
+                  ny = py + dy;
                 if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
                   const idx = (ny * w + nx) * 4;
-                  r += data[idx]; g += data[idx+1]; b += data[idx+2]; count++;
+                  r += data[idx];
+                  g += data[idx + 1];
+                  b += data[idx + 2];
+                  count++;
                 }
               }
             }
             const idx = (py * w + px) * 4;
-            temp[idx] = r/count; temp[idx+1] = g/count; temp[idx+2] = b/count;
+            temp[idx] = r / count;
+            temp[idx + 1] = g / count;
+            temp[idx + 2] = b / count;
           }
         }
         ctx.putImageData(new ImageData(temp, w, h), x, y);
@@ -895,36 +991,70 @@
       }
     }
 
+    // ---------- 获取画布坐标 ----------
     function getCanvasPos(e) {
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
       let clientX, clientY;
-      if (e.touches) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
-      else { clientX = e.clientX; clientY = e.clientY; }
-      return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+      if (e.touches) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+      return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+      };
     }
 
+    // ---------- 模式切换 ----------
     function setMode(mode) {
       currentMode = mode;
       modeBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
       brushGroup.style.display = (mode === 'preview' || mode === 'crop') ? 'none' : 'flex';
       cropRatioPanel.style.display = (mode === 'crop') ? 'block' : 'none';
-      canvas.style.cursor = (mode === 'preview') ? 'default' : (mode === 'crop' ? 'crosshair' : 'none');
+      // 设置光标样式
+      if (mode === 'preview') {
+        canvas.style.cursor = 'default';
+        brushCursor.style.display = 'none';
+      } else if (mode === 'crop') {
+        canvas.style.cursor = 'crosshair';
+        brushCursor.style.display = 'none';
+      } else {
+        canvas.style.cursor = 'none';
+        brushCursor.style.display = 'block';
+        brushCursor.style.width = brushSize * 2 + 'px';
+        brushCursor.style.height = brushSize * 2 + 'px';
+      }
+      // 如果切换到裁剪模式，初始化裁剪框
       if (mode === 'crop' && canvas.width > 0 && cropRect.w === 0) {
-        cropRect.x = 0; cropRect.y = 0; cropRect.w = canvas.width; cropRect.h = canvas.height;
+        cropRect.x = 0;
+        cropRect.y = 0;
+        cropRect.w = canvas.width;
+        cropRect.h = canvas.height;
       }
       drawOverlay();
     }
 
+    // ---------- 导出（含VIP计费） ----------
     function exportImage() {
-      if (canvas.width === 0) { alert('请先上传图片！'); return; }
+      if (canvas.width === 0) {
+        alert('请先上传图片！');
+        return;
+      }
+      // VIP 检查
       const isVIP = localStorage.getItem('xiuxiutu_vip') === 'true';
       if (!isVIP) {
         let count = parseInt(localStorage.getItem('xiuxiutu_exportCount') || '0');
         count++;
         localStorage.setItem('xiuxiutu_exportCount', count);
-        if (count >= 5) { document.getElementById('vipOverlay').classList.add('show'); return; }
+        if (count >= 5) {
+          document.getElementById('vipOverlay').classList.add('show');
+          return;
+        }
       }
       const format = exportFormat.value;
       const quality = 0.92;
@@ -938,13 +1068,15 @@
       }, format, quality);
     }
 
-    // ---------- 事件绑定 ----------
+    // ---------- 事件绑定（钢铁级穿透） ----------
+    // 文件上传
     fileInput.addEventListener('change', function() {
       if (this.files) loadImageFiles(this.files);
       this.value = '';
     });
     uploadZone.addEventListener('click', () => fileInput.click());
-    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.style.borderColor = 'var(--color-primary)'; });
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault();
+      uploadZone.style.borderColor = 'var(--color-primary)'; });
     uploadZone.addEventListener('dragleave', () => { uploadZone.style.borderColor = ''; });
     uploadZone.addEventListener('drop', (e) => {
       e.preventDefault();
@@ -952,26 +1084,38 @@
       if (e.dataTransfer.files) loadImageFiles(e.dataTransfer.files);
     });
 
+    // 间距滑块
     gapSlider.addEventListener('input', function() {
       gap = parseInt(this.value);
       gapLabel.textContent = gap + 'px';
       if (uploadedImages.length > 0) {
         performStitch();
+        // 重置撤销栈
+        undoStack = [];
         undoStack.push(canvas.toDataURL());
         resetCrop();
         drawOverlay();
       }
     });
 
+    // 画笔大小滑块
     brushSlider.addEventListener('input', function() {
       brushSize = parseInt(this.value);
       brushLabel.textContent = brushSize;
+      if (currentMode !== 'preview' && currentMode !== 'crop') {
+        brushCursor.style.width = brushSize * 2 + 'px';
+        brushCursor.style.height = brushSize * 2 + 'px';
+      }
     });
 
+    // 模式切换按钮
     modeBtns.forEach(btn => {
-      btn.addEventListener('click', function() { setMode(this.dataset.mode); });
+      btn.addEventListener('click', function() {
+        setMode(this.dataset.mode);
+      });
     });
 
+    // 裁剪比例按钮
     cropRatioBtns.forEach(btn => {
       btn.addEventListener('click', function() {
         cropRatioBtns.forEach(b => b.classList.remove('active'));
@@ -991,28 +1135,49 @@
     applyCropBtn.addEventListener('click', applyCrop);
     resetCropBtn.addEventListener('click', function() {
       if (canvas.width > 0 && canvas.height > 0) {
-        cropRect.x = 0; cropRect.y = 0; cropRect.w = canvas.width; cropRect.h = canvas.height;
+        cropRect.x = 0;
+        cropRect.y = 0;
+        cropRect.w = canvas.width;
+        cropRect.h = canvas.height;
         drawOverlay();
       }
     });
 
+    // ----- Canvas 交互事件（保证穿透） -----
     canvas.addEventListener('mousedown', startDraw);
-    canvas.addEventListener('mousemove', moveDraw);
+    canvas.addEventListener('mousemove', (e) => {
+      // 更新画笔光标位置
+      if (currentMode !== 'preview' && currentMode !== 'crop') {
+        brushCursor.style.left = e.clientX + 'px';
+        brushCursor.style.top = e.clientY + 'px';
+      }
+      moveDraw(e);
+    });
     canvas.addEventListener('mouseup', endDraw);
     canvas.addEventListener('mouseleave', endDraw);
+
+    // 移动端事件
     canvas.addEventListener('touchstart', startDraw, { passive: false });
-    canvas.addEventListener('touchmove', moveDraw, { passive: false });
+    canvas.addEventListener('touchmove', (e) => {
+      if (currentMode !== 'preview' && currentMode !== 'crop') {
+        const touch = e.touches[0];
+        brushCursor.style.left = touch.clientX + 'px';
+        brushCursor.style.top = touch.clientY + 'px';
+      }
+      moveDraw(e);
+    }, { passive: false });
     canvas.addEventListener('touchend', endDraw);
 
+    // 撤销、清除、导出
     undoBtn.addEventListener('click', undo);
     clearBtn.addEventListener('click', clearAll);
     exportBtn.addEventListener('click', exportImage);
 
-    // 初始状态
+    // 初始化模式
     setMode('preview');
 
     // ================================================================
-    // 4. 一键上架
+    // 4. 一键上架（保留完整）
     // ================================================================
     const listingUploadZone = document.getElementById('listingUploadZone');
     const listingFileInput = document.getElementById('listingFileInput');
@@ -1077,12 +1242,12 @@
     });
 
     const PLATFORM_SIZES = {
-      taobao: { name: '淘宝', sizes: [{label:'主图-白底',w:800,h:800,whiteBg:true},{label:'主图-场景',w:800,h:800,whiteBg:false},{label:'详情图',w:750,h:0,whiteBg:false},{label:'PC主图',w:460,h:460,whiteBg:false}] },
-      pdd: { name: '拼多多', sizes: [{label:'主图',w:800,h:800,whiteBg:false},{label:'轮播图',w:800,h:800,whiteBg:false},{label:'详情图',w:750,h:0,whiteBg:false},{label:'白底图',w:480,h:480,whiteBg:true}] },
-      douyin: { name: '抖音', sizes: [{label:'商品主图',w:800,h:800,whiteBg:false},{label:'详情图',w:750,h:0,whiteBg:false},{label:'封面图',w:1080,h:1440,whiteBg:false}] },
-      xiaohongshu: { name: '小红书', sizes: [{label:'竖版笔记',w:1080,h:1440,whiteBg:false},{label:'横版封面',w:1440,h:1080,whiteBg:false},{label:'方图',w:800,h:800,whiteBg:false}] },
-      jingdong: { name: '京东', sizes: [{label:'主图-白底',w:800,h:800,whiteBg:true},{label:'主图-场景',w:800,h:800,whiteBg:false},{label:'详情图',w:750,h:0,whiteBg:false},{label:'白底图(大)',w:1000,h:1000,whiteBg:true}] },
-      amazon: { name: '亚马逊', sizes: [{label:'主图-白底',w:1600,h:1600,whiteBg:true},{label:'辅图',w:1600,h:1600,whiteBg:false},{label:'A+内容图',w:970,h:600,whiteBg:false}] }
+      taobao: { name: '淘宝', sizes: [{ label: '主图-白底', w: 800, h: 800, whiteBg: true }, { label: '主图-场景', w: 800, h: 800, whiteBg: false }, { label: '详情图', w: 750, h: 0, whiteBg: false }, { label: 'PC主图', w: 460, h: 460, whiteBg: false }] },
+      pdd: { name: '拼多多', sizes: [{ label: '主图', w: 800, h: 800, whiteBg: false }, { label: '轮播图', w: 800, h: 800, whiteBg: false }, { label: '详情图', w: 750, h: 0, whiteBg: false }, { label: '白底图', w: 480, h: 480, whiteBg: true }] },
+      douyin: { name: '抖音', sizes: [{ label: '商品主图', w: 800, h: 800, whiteBg: false }, { label: '详情图', w: 750, h: 0, whiteBg: false }, { label: '封面图', w: 1080, h: 1440, whiteBg: false }] },
+      xiaohongshu: { name: '小红书', sizes: [{ label: '竖版笔记', w: 1080, h: 1440, whiteBg: false }, { label: '横版封面', w: 1440, h: 1080, whiteBg: false }, { label: '方图', w: 800, h: 800, whiteBg: false }] },
+      jingdong: { name: '京东', sizes: [{ label: '主图-白底', w: 800, h: 800, whiteBg: true }, { label: '主图-场景', w: 800, h: 800, whiteBg: false }, { label: '详情图', w: 750, h: 0, whiteBg: false }, { label: '白底图(大)', w: 1000, h: 1000, whiteBg: true }] },
+      amazon: { name: '亚马逊', sizes: [{ label: '主图-白底', w: 1600, h: 1600, whiteBg: true }, { label: '辅图', w: 1600, h: 1600, whiteBg: false }, { label: 'A+内容图', w: 970, h: 600, whiteBg: false }] }
     };
 
     listingExportBtn.addEventListener('click', async function() {
@@ -1120,17 +1285,21 @@
 
     function generateSizeCanvas(img, size, mode) {
       const canvas = document.createElement('canvas');
-      let w = size.w, h = size.h;
+      let w = size.w,
+        h = size.h;
       if (h === 0) h = Math.round(w / (img.naturalWidth / img.naturalHeight));
-      canvas.width = w; canvas.height = h;
+      canvas.width = w;
+      canvas.height = h;
       const ctx = canvas.getContext('2d');
       const useWhiteBg = (size.whiteBg || mode === 'whiteBg');
       if (useWhiteBg) {
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, w, h);
         const scale = Math.min(w / img.naturalWidth, h / img.naturalHeight);
-        const dw = img.naturalWidth * scale, dh = img.naturalHeight * scale;
-        const dx = (w - dw) / 2, dy = (h - dh) / 2;
+        const dw = img.naturalWidth * scale,
+          dh = img.naturalHeight * scale;
+        const dx = (w - dw) / 2,
+          dy = (h - dh) / 2;
         ctx.drawImage(img, dx, dy, dw, dh);
       } else {
         ctx.drawImage(img, 0, 0, w, h);
@@ -1140,7 +1309,7 @@
 
     updateListingExportBtn();
 
-    console.log('✅ 修修图 · 电商工作台 最终交割版已加载！');
+    console.log('✅ 修修图 · 电商工作台 核心逻辑已强制灌注！');
   </script>
 </body>
 </html>
