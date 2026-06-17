@@ -40,7 +40,7 @@
       height: 100vh;
     }
 
-    /* ---------- Navbar 100% 绝对居中对齐 ---------- */
+    /* ---------- Navbar ---------- */
     .navbar {
       display: flex;
       align-items: center;
@@ -63,7 +63,7 @@
       margin-top: var(--header-height);
     }
 
-    /* 左侧控制台（绝对锁死、独立滚动、呼吸间距） */
+    /* 左侧控制台 */
     .sidebar-controls {
       width: var(--sidebar-width);
       background: var(--bg-card);
@@ -77,7 +77,7 @@
       z-index: 200;
     }
 
-    /* 右侧暗房画布区（包裹自适应、杜绝溢出、掌控全局） */
+    /* 右侧暗房画布区 */
     .canvas-darkroom {
       flex-grow: 1;
       background: var(--bg-workspace);
@@ -117,7 +117,7 @@
       font-size: 10px; line-height: 14px; text-align: center; cursor: pointer; z-index: 5;
     }
 
-    /* 垂直垂直表单组件 */
+    /* 垂直表单组件 */
     .btn-vertical-stack { display: flex; flex-direction: column; gap: 8px; }
     .btn {
       width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -155,11 +155,14 @@
     /* VIP */
     .vip-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(6px); z-index: 9999; display: none; align-items: center; justify-content: center; }
     .vip-modal { background: var(--bg-card); border-radius: 24px; padding: 40px 32px; max-width: 400px; width: 90%; text-align: center; border: 1px solid var(--border-light); box-shadow: 0 30px 60px rgba(0,0,0,0.4); }
+
+    /* 裁剪比例按钮 */
+    .crop-ratio-btn { padding: 6px; border: 1px solid var(--border-light); border-radius: 8px; text-align: center; font-size: 0.75rem; cursor: pointer; transition: all 0.15s; }
+    .crop-ratio-btn.active { background: var(--color-primary); color: #0F172A; font-weight: 700; }
   </style>
 </head>
 <body class="dark">
 
-  <!-- VIP 弹窗 -->
   <div class="vip-overlay" id="vipOverlay">
     <div class="vip-modal">
       <h2 class="text-2xl font-bold mb-2">🔒 试用已结束</h2>
@@ -168,7 +171,6 @@
     </div>
   </div>
 
-  <!-- 右键快捷随手菜单 -->
   <div id="floatingMenu">
     <button class="menu-btn" data-mode="preview">📐 预览</button>
     <button class="menu-btn" data-mode="mosaic">🧩 马赛克</button>
@@ -178,7 +180,6 @@
     <button class="menu-btn" id="menuClear">🗑️</button>
   </div>
 
-  <!-- 顶部中轴对齐导航栏 -->
   <header class="navbar">
     <div class="brand">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
@@ -201,17 +202,14 @@
     </div>
   </header>
 
-  <!-- 全屏大工作站布局 -->
   <div class="app-workspace">
     
-    <!-- 左侧独立、绝对固定控制面板（Photoshop心智布局） -->
     <aside class="sidebar-controls">
       <div style="display:flex; gap:8px; border-bottom:1px solid var(--border-light); padding-bottom:12px;">
         <button class="btn tool-tab active" data-tool="stitch" style="padding:6px 12px;">📱 拼图打码</button>
         <button class="btn tool-tab" data-tool="listing" style="padding:6px 12px;">📦 一键上架</button>
       </div>
 
-      <!-- 模块 A：工作台拼接逻辑 -->
       <div id="sideStitch" class="flex flex-col gap-5">
         <div class="control-block">
           <span class="block-title">数据链入</span>
@@ -250,11 +248,10 @@
           </div>
         </div>
 
-        <!-- 裁剪比例参数面板 -->
         <div class="control-block" id="cropRatioPanel" style="display:none;">
           <span class="block-title">固定裁剪比例</span>
           <div class="grid grid-cols-2 gap-2">
-            <button class="crop-ratio-btn active" data-ratio="free">自由自由</button>
+            <button class="crop-ratio-btn active" data-ratio="free">自由</button>
             <button class="crop-ratio-btn" data-ratio="1:1">方形 1:1</button>
             <button class="crop-ratio-btn" data-ratio="4:3">标准 4:3</button>
             <button class="crop-ratio-btn" data-ratio="16:9">宽屏 16:9</button>
@@ -269,7 +266,7 @@
           <span class="block-title">终极交割</span>
           <div class="flex flex-col gap-2">
             <div class="flex items-center gap-2">
-              <select id="exportFormat" class="flex-grow p-2 text-xs rounded-lg border" style="background:var(--bg-main); color:var(--color-text); border-color:var(--border-light);">
+              <select id="exportFormat" class="flex-grow p-2 text-xs rounded-lg border" style="background:var(--bg-main); color:var(--text); border-color:var(--border-light);">
                 <option value="image/jpeg">JPG 完美品质</option>
                 <option value="image/png">PNG 透明无损</option>
                 <option value="image/webp">WebP 高清抗压缩</option>
@@ -284,7 +281,6 @@
         </div>
       </div>
 
-      <!-- 模块 B：一键上架逻辑 -->
       <div id="sideListing" class="flex flex-col gap-5" style="display:none;">
         <div class="control-block">
           <span class="block-title">原图链入</span>
@@ -323,7 +319,6 @@
       </div>
     </aside>
 
-    <!-- 右侧全自适应暗房区（100%锁死首屏边界，杜绝图片撑开溢出） -->
     <main class="canvas-darkroom">
       <div class="canvas-container-mask">
         <div class="darkroom-placeholder" id="placeholder">
@@ -354,18 +349,15 @@
       });
     })();
 
-    // ================================================================
-    // 2. 计费墙状态回滚
-    // ================================================================
     function activateVIP() {
       localStorage.setItem('xiuxiutu_vip', 'true');
       localStorage.setItem('xiuxiutu_exportCount', '0');
-      document.getElementById('vipOverlay').classList.remove('show');
+      document.getElementById('vipOverlay').style.display = 'none';
       alert('🎉 VIP无限生产力特权已激活！');
     }
 
     // ================================================================
-    // 3. 全权接管核心自研图像算法（全首屏显示包裹）
+    // 2. 核心状态机与DOM映射
     // ================================================================
     let uploadedImages = [];
     let gap = 4;
@@ -375,7 +367,7 @@
     let isDrawing = false;
     let lastPos = null;
     let cropRect = { x: 0, y: 0, w: 0, h: 0, ratio: 'free', dragging: false, startX: 0, startY: 0 };
-    let editWidth = 1600; // 编辑物理宽度防爆，CSS 锁死全显
+    let editWidth = 1600; 
     let originalMaxWidth = 0;
 
     const canvas = document.getElementById('mainCanvas');
@@ -401,7 +393,6 @@
     const placeholder = document.getElementById('placeholder');
     const toolTabs = document.querySelectorAll('.tool-tab');
     
-    // 右键胶囊组件
     const floatingMenu = document.getElementById('floatingMenu');
     const menuBtns = floatingMenu.querySelectorAll('.menu-btn');
     const menuUndo = document.getElementById('menuUndo');
@@ -418,7 +409,9 @@
       });
     });
 
-    // 图像垂直等比无损拼接边界零黑底公式
+    // ================================================================
+    // 3. 核心拼接渲染核心算法
+    // ================================================================
     function performStitch() {
       if (uploadedImages.length === 0) {
         canvas.width = 0; canvas.height = 0; canvas.style.display = 'none';
@@ -463,21 +456,26 @@
 
     function loadImageFiles(files) {
       let loaded = 0;
-      for (let f of files) {
-        if (!f.type.startsWith('image/')) continue;
+      let targetFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+      if(targetFiles.length === 0) return;
+      
+      targetFiles.forEach((f) => {
         const reader = new FileReader();
         reader.onload = (e) => {
           const img = new Image();
           img.onload = () => {
             uploadedImages.push({ img, src: e.target.result, originalWidth: img.width, originalHeight: img.height });
-            loaded++; if (loaded === files.length) performStitch();
+            loaded++; if (loaded === targetFiles.length) performStitch();
           };
           img.src = e.target.result;
         };
         reader.readAsDataURL(f);
-      }
-      fileInput.value = '';
+      });
     }
+
+    // 绑定上传监听（彻底修复点击失效死穴）
+    uploadZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', function() { if (this.files.length) loadImageFiles(this.files); });
 
     function undo() {
       if (undoStack.length <= 1) return;
@@ -517,7 +515,7 @@
       undoStack.push(canvas.toDataURL('image/jpeg', 0.85)); resetCrop(); setMode('preview');
     }
 
-    // 脏区离屏低载高性能像素打码算法
+    // 像素马赛克
     function applyMosaicAt(pos) {
       const half = brushSize / 2;
       const x = Math.max(0, Math.floor(pos.x - half)), y = Math.max(0, Math.floor(pos.y - half));
@@ -530,7 +528,7 @@
       ctx.save(); ctx.imageSmoothingEnabled = false; ctx.drawImage(off, x, y, w, h); ctx.restore();
     }
 
-    // GPU 硬件加速画笔模糊
+    // 模糊算法
     function applyBlurAt(pos) {
       const half = brushSize / 2;
       const x = Math.max(0, Math.floor(pos.x - half)), y = Math.max(0, Math.floor(pos.y - half));
@@ -542,7 +540,6 @@
       ctx.filter = 'blur(6px)'; ctx.drawImage(temp, x, y); ctx.restore();
     }
 
-    // 脏区高速增量渲染监听
     function startDraw(e) {
       if (currentMode === 'preview' || uploadedImages.length === 0) return;
       e.preventDefault(); const pos = getCanvasPos(e);
@@ -599,12 +596,11 @@
       drawOverlay();
     }
 
-    // 后台高清原图拼轨无损下载
     function exportImage() {
       if (uploadedImages.length === 0) return;
       if (localStorage.getItem('xiuxiutu_vip') !== 'true') {
         let count = parseInt(localStorage.getItem('xiuxiutu_exportCount') || '0') + 1; localStorage.setItem('xiuxiutu_exportCount', count);
-        if (count >= 5) { document.getElementById('vipOverlay').classList.add('show'); return; }
+        if (count >= 5) { document.getElementById('vipOverlay').style.display = 'flex'; return; }
       }
       const exportCanvas = document.createElement('canvas'); const exportCtx = exportCanvas.getContext('2d'); const baseWidth = originalMaxWidth;
       let totalHeight = 0;
@@ -623,7 +619,7 @@
       finalCanvas.toBlob((blob) => { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `修修图_完美高清拼图_${Date.now()}.${exportFormat.value.split('/')[1]}`; a.click(); URL.revokeObjectURL(url); }, exportFormat.value, 0.95);
     }
 
-    // 全画布随手右键胶囊弹出事件
+    // 右键随手菜单弹出
     canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); floatingMenu.style.left = (e.clientX + 12) + 'px'; floatingMenu.style.top = (e.clientY + 12) + 'px'; floatingMenu.style.display = 'flex'; menuBtns.forEach(btn => btn.classList.toggle('active-mode', btn.dataset.mode === currentMode)); });
     menuBtns.forEach(btn => btn.addEventListener('click', function() { if (this.dataset.mode) setMode(this.dataset.mode); floatingMenu.style.display = 'none'; }));
     menuUndo.addEventListener('click', () => { undo(); floatingMenu.style.display = 'none'; });
@@ -631,9 +627,7 @@
     floatingMenu.addEventListener('mouseleave', () => floatingMenu.style.display = 'none');
     document.addEventListener('click', (e) => { if (!floatingMenu.contains(e.target)) floatingMenu.style.display = 'none'; });
 
-    // 交互绑定
-    fileInput.addEventListener('change', function() { if (this.files.length) loadImageFiles(this.files); });
-    uploadZone.addEventListener('click', () => fileInput.click());
+    // 其他事件监听
     gapSlider.addEventListener('input', function() { gap = parseInt(this.value); gapLabel.textContent = gap + 'px'; if (uploadedImages.length) performStitch(); });
     brushSlider.addEventListener('input', function() { brushSize = parseInt(this.value); brushLabel.textContent = brushSize; if (brushCursor.style.display === 'block') { brushCursor.style.width = brushSize + 'px'; brushCursor.style.height = brushSize + 'px'; } });
     modeBtns.forEach(btn => btn.addEventListener('click', function() { setMode(this.dataset.mode); }));
@@ -651,7 +645,7 @@
     undoBtn.addEventListener('click', undo); clearBtn.addEventListener('click', clearAll); exportBtn.addEventListener('click', exportImage);
 
     // ================================================================
-    // 4. 一键上架核心模块无损融合
+    // 4. 一键上架模块
     // ================================================================
     const listingUploadZone = document.getElementById('listingUploadZone');
     const listingFileInput = document.getElementById('listingFileInput');
@@ -692,7 +686,7 @@
       const a = document.createElement('a'); a.href = url; a.download = '修修图_全平台图片包.zip'; a.click(); URL.revokeObjectURL(url);
     });
 
-    console.log('✅ 修修图 · 电商工作台 沉浸式全屏工作站正式上线！');
+    console.log('✅ 修修图 · 电商工作台 全量通道无损修复完毕！');
   </script>
 </body>
 </html>
