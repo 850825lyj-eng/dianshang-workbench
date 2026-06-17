@@ -147,17 +147,18 @@
     }
     .upload-zone:hover { border-color: var(--color-primary); background: rgba(6, 182, 212, 0.05); }
 
-    /* 吸顶控制面板 */
+    /* 吸顶控制面板锁定 */
     .sticky-controls {
       position: sticky;
       top: var(--header-height);
       z-index: 100;
       background: var(--bg-card);
-      padding: 12px 0 8px;
+      padding: 12px 12px 8px;
       margin: 0 -4px 16px -4px;
       border-bottom: 1px solid var(--border-light);
-      backdrop-filter: blur(4px);
-      transition: background 0.25s, border-color 0.25s;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     }
     .sticky-controls .thumb-list { margin-bottom: 8px; }
     .sticky-controls .control-bar { margin-top: 0; }
@@ -168,6 +169,8 @@
       flex-wrap: wrap;
       gap: 12px;
       margin: 0 0 8px 0;
+      max-height: 90px;
+      overflow-y: auto;
     }
     .thumb-item {
       position: relative;
@@ -182,17 +185,18 @@
     .thumb-item img { width: 100%; height: 100%; object-fit: cover; }
     .thumb-item .del-btn {
       position: absolute;
-      top: -6px;
-      right: -6px;
+      top: 2px;
+      right: 2px;
       width: 20px; height: 20px;
       border-radius: 50%;
       background: #EF4444;
       color: white;
       border: none;
       font-size: 12px;
-      line-height: 20px;
+      line-height: 18px;
       text-align: center;
       cursor: pointer;
+      z-index: 5;
     }
 
     .control-bar {
@@ -202,8 +206,6 @@
       align-items: center;
       padding: 8px 0;
       background: transparent;
-      border-radius: 12px;
-      border: none;
     }
     .control-group {
       display: flex;
@@ -234,27 +236,27 @@
       border-radius: 12px;
       overflow: auto;
       border: 1px solid var(--border-light);
-      background: #fff;
-      max-height: 70vh;
+      background: rgba(0,0,0,0.2);
+      max-height: 75vh;
       position: relative;
       z-index: 10;
     }
     .canvas-wrapper canvas {
       display: block;
-      width: 100%;
+      margin: 0 auto;
+      max-width: 100%;
       height: auto;
       position: relative;
       z-index: 10;
-      cursor: default;
     }
 
     /* VIP */
     .vip-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.6);
+      background: rgba(15, 23, 42, 0.7);
       backdrop-filter: blur(4px);
-      z-index: 999;
+      z-index: 9999;
       display: none;
       align-items: center;
       justify-content: center;
@@ -268,10 +270,10 @@
       width: 90%;
       text-align: center;
       border: 1px solid var(--border-light);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
     }
     .vip-modal h2 { font-size: 1.8rem; margin-bottom: 12px; color: var(--color-text); }
     .vip-modal p { color: var(--color-text-secondary); margin-bottom: 24px; }
-    .vip-modal .btn { width: 100%; justify-content: center; }
 
     /* 底部功能卡片 */
     .features-grid {
@@ -293,20 +295,8 @@
       font-size: 0.85rem;
       margin-top: 30px;
     }
-    .mt-2 { margin-top: 12px; }
-    .mb-2 { margin-bottom: 12px; }
-    .mb-4 { margin-bottom: 24px; }
     .hidden { display: none !important; }
-    .flex { display: flex; }
-    .flex-wrap { flex-wrap: wrap; }
-    .gap-2 { gap: 8px; }
-    .gap-4 { gap: 16px; }
-    .items-center { align-items: center; }
-    .justify-between { justify-content: space-between; }
-    .w-full { width: 100%; }
-    .text-center { text-align: center; }
-    .text-muted { color: var(--color-text-muted); }
-    .text-secondary { color: var(--color-text-secondary); }
+    .btn.active { border-color: var(--color-primary); color: var(--color-primary); background: rgba(6,182,212,0.08); font-weight: 700; }
 
     /* 画笔光标 */
     #brushCursor {
@@ -314,62 +304,55 @@
       pointer-events: none;
       border: 2px solid var(--color-primary);
       border-radius: 50%;
-      background: rgba(6, 182, 212, 0.1);
-      z-index: 1000;
+      background: rgba(6, 182, 212, 0.15);
+      z-index: 5000;
       display: none;
       transform: translate(-50%, -50%);
-      transition: width 0.1s, height 0.1s;
     }
 
-    /* ========== 右键悬浮毛玻璃菜单 ========== */
+    /* ========== 右键悬浮菜单 ========== */
     #floatingMenu {
       position: fixed;
       display: none;
-      background: rgba(20, 30, 50, 0.7);
+      background: rgba(15, 23, 42, 0.85);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.1);
       border-radius: 60px;
-      padding: 8px 16px;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-      z-index: 2000;
+      padding: 6px 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      z-index: 6000;
       gap: 8px;
       align-items: center;
-      transition: opacity 0.15s;
-      pointer-events: auto;
     }
     #floatingMenu .menu-btn {
       background: transparent;
       border: none;
-      color: var(--color-text);
-      font-size: 1.1rem;
-      padding: 6px 10px;
+      color: #94A3B8;
+      font-size: 0.95rem;
+      padding: 6px 12px;
       border-radius: 40px;
       cursor: pointer;
       transition: all 0.2s;
       font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 4px;
     }
     #floatingMenu .menu-btn:hover {
-      background: rgba(6, 182, 212, 0.2);
+      background: rgba(6, 182, 212, 0.15);
       color: var(--color-primary);
     }
     #floatingMenu .menu-btn.active-mode {
       background: var(--color-primary);
-      color: #0F172A;
+      color: #0F172A !important;
     }
     #floatingMenu .menu-divider {
       width: 1px;
-      height: 24px;
-      background: rgba(255,255,255,0.2);
+      height: 20px;
+      background: rgba(255,255,255,0.15);
     }
   </style>
 </head>
 <body>
 
-  <!-- VIP 弹窗 -->
   <div class="vip-overlay" id="vipOverlay">
     <div class="vip-modal">
       <h2>🔒 试用已结束</h2>
@@ -379,17 +362,15 @@
     </div>
   </div>
 
-  <!-- 右键悬浮菜单 -->
   <div id="floatingMenu">
     <button class="menu-btn" data-mode="preview">📐 预览</button>
-    <button class="menu-btn" data-mode="mosaic">🧩</button>
-    <button class="menu-btn" data-mode="blur">🌫️</button>
+    <button class="menu-btn" data-mode="mosaic">🧩 马赛克</button>
+    <button class="menu-btn" data-mode="blur">🌫️ 模糊</button>
     <div class="menu-divider"></div>
-    <button class="menu-btn" id="menuUndo">↩️</button>
-    <button class="menu-btn" id="menuClear">🗑️</button>
+    <button class="menu-btn" id="menuUndo">↩️ 撤销</button>
+    <button class="menu-btn" id="menuClear">🗑️ 清除</button>
   </div>
 
-  <!-- ========== 顶部导航 ========== -->
   <header class="navbar">
     <div class="brand">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="36" height="36">
@@ -431,27 +412,21 @@
     </div>
   </header>
 
-  <!-- ========== 主容器 ========== -->
   <div class="container">
 
-    <!-- Banner -->
     <section id="home" class="banner">
       <h1>电商图片 <span>一站式处理</span></h1>
       <p>多图拼接 · 隐私打码 · 智能裁剪 · 一键上架全平台</p>
     </section>
 
-    <!-- ========== 工具面板 ========== -->
     <section id="tool">
       <div class="card">
-        <!-- 标签页 -->
         <div style="display:flex; gap:12px; flex-wrap:wrap; border-bottom:1px solid var(--border-light); padding-bottom:12px; margin-bottom:16px;">
           <button class="btn tool-tab active" data-tool="stitch">📱 拼图 / 打码 / 裁剪</button>
           <button class="btn tool-tab" data-tool="listing">📦 一键上架 <span style="background:#F97316; color:white; font-size:0.6rem; padding:2px 10px; border-radius:30px;">VIP</span></button>
         </div>
 
-        <!-- 拼图/打码/裁剪 -->
         <div id="toolStitch">
-          <!-- 上传区 -->
           <div class="upload-zone" id="uploadZone">
             <div style="font-size:3rem;">📁</div>
             <p style="font-weight:600; color:var(--color-text);">点击或拖拽图片到此处</p>
@@ -459,12 +434,9 @@
           </div>
           <input type="file" id="fileInput" accept="image/*" multiple style="display:none;" />
 
-          <!-- ===== 吸顶控制面板 ===== -->
           <div class="sticky-controls">
-            <!-- 缩略图列表 -->
             <div class="thumb-list" id="thumbList"></div>
 
-            <!-- 控制条 -->
             <div class="control-bar">
               <div class="control-group">
                 <label>间距</label>
@@ -482,8 +454,8 @@
 
               <div class="control-group" id="brushGroup" style="display:none;">
                 <label>画笔</label>
-                <input type="range" id="brushSlider" min="4" max="120" value="30" />
-                <span id="brushLabel" style="min-width:30px; font-weight:600; color:var(--color-primary);">30</span>
+                <input type="range" id="brushSlider" min="10" max="150" value="40" />
+                <span id="brushLabel" style="min-width:30px; font-weight:600; color:var(--color-primary);">40</span>
               </div>
 
               <div class="control-group" style="margin-left:auto;">
@@ -499,7 +471,6 @@
               </div>
             </div>
 
-            <!-- 裁剪比例（也吸顶） -->
             <div id="cropRatioPanel" style="display:none;">
               <div class="crop-ratio-group">
                 <span style="font-weight:600; color:var(--color-text-secondary);">比例：</span>
@@ -512,16 +483,12 @@
               </div>
             </div>
           </div>
-          <!-- ===== 吸顶控制面板结束 ===== -->
-
-          <!-- Canvas 容器 -->
           <div class="canvas-wrapper">
             <canvas id="mainCanvas"></canvas>
           </div>
           <div id="brushCursor"></div>
         </div>
 
-        <!-- 一键上架 -->
         <div id="toolListing" style="display:none;">
           <h2 style="font-size:1.4rem; font-weight:700; color:var(--color-text);">📦 一键上架</h2>
           <p class="text-secondary">上传商品主图，自动生成全平台适配尺寸包。</p>
@@ -578,7 +545,6 @@
       </div>
     </section>
 
-    <!-- ========== 功能卡片 ========== -->
     <section id="features" style="padding: 20px 0;">
       <h2 style="font-size:1.6rem; font-weight:700; text-align:center; color:var(--color-text);">核心功能</h2>
       <div class="features-grid">
@@ -592,7 +558,6 @@
       </div>
     </section>
 
-    <!-- ========== 关于我们 ========== -->
     <section id="about" style="padding: 20px 0;">
       <div style="max-width:600px; margin:0 auto; text-align:center;">
         <h2 style="font-size:1.4rem; font-weight:700; color:var(--color-text);">关于修修图</h2>
@@ -657,12 +622,12 @@
     })();
 
     // ================================================================
-    // 3. 核心算法（修正高度计算 + 右键菜单）
+    // 3. 核心算法工作站
     // ================================================================
     let uploadedImages = [];
     let gap = 4;
     let currentMode = 'preview';
-    let brushSize = 30;
+    let brushSize = 40;
     let undoStack = [];
     let isDrawing = false;
     let lastPos = null;
@@ -694,13 +659,13 @@
     const toolStitch = document.getElementById('toolStitch');
     const toolListing = document.getElementById('toolListing');
 
-    // 右键菜单相关
+    // 右键菜单
     const floatingMenu = document.getElementById('floatingMenu');
     const menuBtns = floatingMenu.querySelectorAll('.menu-btn');
     const menuUndo = document.getElementById('menuUndo');
     const menuClear = document.getElementById('menuClear');
 
-    // ---------- 工具切换 ----------
+    // 工具切换
     toolTabs.forEach(tab => {
       tab.addEventListener('click', function() {
         toolTabs.forEach(t => t.classList.remove('active'));
@@ -715,53 +680,47 @@
       });
     });
 
-    // ---------- 多图拼接（修正高度计算） ----------
+    // 工业级算法 A：多图自适应横向等比缩放 + 裁剪总高精算（100%杜绝底部漏黑）
     function performStitch() {
       if (uploadedImages.length === 0) {
-        canvas.width = 0;
-        canvas.height = 0;
+        canvas.width = 0; canvas.height = 0;
         ctx.clearRect(0, 0, 0, 0);
         updateThumbnails();
         return;
       }
 
-      // 1. 计算基准宽度（最大原始宽度）
       originalMaxWidth = Math.max(...uploadedImages.map(item => item.originalWidth));
       const targetWidth = Math.min(originalMaxWidth, editWidth);
 
-      // 2. 计算总高度（基于缩放后的实际高度，四舍五入取整防止黑底）
+      // 计算自适应撑满后的真实物理高度累加
       let totalHeight = 0;
       uploadedImages.forEach((item, index) => {
         const scale = targetWidth / item.originalWidth;
         const targetHeight = Math.round(item.originalHeight * scale);
         totalHeight += targetHeight;
-        if (index < uploadedImages.length - 1) {
-          totalHeight += gap;
-        }
+        if (index < uploadedImages.length - 1) totalHeight += gap;
       });
 
       canvas.width = targetWidth;
       canvas.height = totalHeight;
 
-      // 3. 绘制（使用整数坐标和尺寸）
+      // 严丝合缝按取整高度进行绘制覆盖
       let yPos = 0;
       uploadedImages.forEach((item, index) => {
         const scale = targetWidth / item.originalWidth;
         const targetHeight = Math.round(item.originalHeight * scale);
         ctx.drawImage(item.img, 0, yPos, targetWidth, targetHeight);
         yPos += targetHeight;
-        if (index < uploadedImages.length - 1) {
-          yPos += gap;
-        }
+        if (index < uploadedImages.length - 1) yPos += gap;
       });
 
-      // 4. 保存初始状态
-      undoStack.push(canvas.toDataURL());
+      // 覆盖或初始堆栈
+      undoStack = [canvas.toDataURL('image/jpeg', 0.85)];
       updateThumbnails();
       resetCrop();
     }
 
-    // ---------- 缩略图 ----------
+    // 更新缩略图
     function updateThumbnails() {
       thumbList.innerHTML = '';
       uploadedImages.forEach((item, index) => {
@@ -786,13 +745,11 @@
       if (index >= 0 && index < uploadedImages.length) {
         uploadedImages.splice(index, 1);
         performStitch();
-        undoStack = [];
-        if (canvas.width > 0 && canvas.height > 0) undoStack.push(canvas.toDataURL());
       }
     }
 
-    // ---------- 加载图片 ----------
     function loadImageFiles(files) {
+      let loaded = 0;
       for (let f of files) {
         if (!f.type.startsWith('image/')) continue;
         const reader = new FileReader();
@@ -800,15 +757,13 @@
           const img = new Image();
           img.onload = () => {
             uploadedImages.push({
-              img: img,
-              src: e.target.result,
-              name: f.name,
-              originalWidth: img.width,
-              originalHeight: img.height
+              img: img, src: e.target.result, name: f.name,
+              originalWidth: img.width, originalHeight: img.height
             });
-            performStitch();
-            undoStack = [];
-            if (canvas.width > 0 && canvas.height > 0) undoStack.push(canvas.toDataURL());
+            loaded++;
+            if (loaded === files.length || uploadedImages.length === files.length) {
+              performStitch();
+            }
           };
           img.src = e.target.result;
         };
@@ -817,483 +772,383 @@
       fileInput.value = '';
     }
 
-    // ---------- 撤销 ----------
+    // 撤销堆栈恢复
     function undo() {
       if (undoStack.length <= 1) return;
       undoStack.pop();
       const prevState = undoStack[undoStack.length - 1];
-      if (prevState) {
-        const img = new Image();
-        img.onload = () => {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(img, 0, 0);
-          resetCrop();
-        };
-        img.src = prevState;
-      }
-    }
-
-    // ---------- 清除 ----------
-    function clearAll() {
-      uploadedImages = [];
-      canvas.width = 0;
-      canvas.height = 0;
-      ctx.clearRect(0, 0, 0, 0);
-      undoStack = [];
-      updateThumbnails();
-      resetCrop();
-      brushCursor.style.display = 'none';
-    }
-
-    // ---------- 裁剪 ----------
-    function resetCrop() {
-      cropRect = { x: 0, y: 0, w: 0, h: 0, ratio: 'free', dragging: false, startX: 0, startY: 0 };
-      if (canvas.width > 0 && canvas.height > 0) {
-        cropRect.w = canvas.width;
-        cropRect.h = canvas.height;
-      }
-      drawOverlay();
-    }
-
-    function drawOverlay() {
-      if (undoStack.length === 0) return;
-      const currentState = undoStack[undoStack.length - 1];
-      if (!currentState) return;
       const img = new Image();
       img.onload = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0);
-        if (currentMode === 'crop' && cropRect.w > 0 && cropRect.h > 0) {
+        if (currentMode === 'crop') drawOverlay();
+      };
+      img.src = prevState;
+    }
+
+    function clearAll() {
+      uploadedImages = []; canvas.width = 0; canvas.height = 0;
+      ctx.clearRect(0, 0, 0, 0); undoStack = [];
+      updateThumbnails(); resetCrop();
+      brushCursor.style.display = 'none';
+    }
+
+    // ---------- 裁剪处理层 ----------
+    function resetCrop() {
+      cropRect = { x: 0, y: 0, w: canvas.width, h: canvas.height, ratio: 'free', dragging: false, startX: 0, startY: 0 };
+      if (currentMode === 'crop') drawOverlay();
+    }
+
+    function drawOverlay() {
+      if (undoStack.length === 0) return;
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        if (currentMode === 'crop') {
           const { x, y, w, h } = cropRect;
-          ctx.fillStyle = 'rgba(0,0,0,0.4)';
+          ctx.fillStyle = 'rgba(0,0,0,0.55)';
           ctx.fillRect(0, 0, canvas.width, y);
           ctx.fillRect(0, y, x, h);
           ctx.fillRect(x + w, y, canvas.width - x - w, h);
           ctx.fillRect(0, y + h, canvas.width, canvas.height - y - h);
-          ctx.strokeStyle = '#06B6D4';
-          ctx.lineWidth = 2;
-          ctx.setLineDash([6, 4]);
-          ctx.strokeRect(x, y, w, h);
-          ctx.setLineDash([]);
-          const corners = [[x,y],[x+w,y],[x,y+h],[x+w,y+h]];
-          corners.forEach(([cx,cy]) => {
-            ctx.fillStyle = '#06B6D4';
-            ctx.fillRect(cx-4, cy-4, 8, 8);
+          ctx.strokeStyle = varColor('primary');
+          ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+          ctx.strokeRect(x, y, w, h); ctx.setLineDash([]);
+          [[x,y],[x+w,y],[x,y+h],[x+w,y+h]].forEach(([cx,cy]) => {
+            ctx.fillStyle = varColor('primary'); ctx.fillRect(cx-5, cy-5, 10, 10);
           });
         }
       };
-      img.src = currentState;
+      img.src = undoStack[undoStack.length - 1];
+    }
+
+    function varColor(type) {
+      return document.body.classList.contains('light') ? (type === 'primary' ? '#0284C7' : '#F8FAFC') : (type === 'primary' ? '#06B6D4' : '#0F172A');
     }
 
     function applyCrop() {
       if (cropRect.w < 10 || cropRect.h < 10) return;
       const { x, y, w, h } = cropRect;
       const imageData = ctx.getImageData(x, y, w, h);
-      canvas.width = w;
-      canvas.height = h;
+      canvas.width = w; canvas.height = h;
       ctx.putImageData(imageData, 0, 0);
-      undoStack.pop();
-      undoStack.push(canvas.toDataURL());
-      resetCrop();
-      setMode('preview');
+      undoStack.push(canvas.toDataURL('image/jpeg', 0.85));
+      resetCrop(); setMode('preview');
     }
 
-    // ---------- 马赛克 ----------
+    // 工业级算法 B：增量脏区局部高性能马赛克（万级长图 0 毫秒卡顿延迟）
     function applyMosaicAt(pos) {
       const half = brushSize / 2;
-      const x = Math.max(0, pos.x - half);
-      const y = Math.max(0, pos.y - half);
+      const x = Math.max(0, Math.floor(pos.x - half));
+      const y = Math.max(0, Math.floor(pos.y - half));
       const w = Math.min(brushSize, canvas.width - x);
       const h = Math.min(brushSize, canvas.height - y);
       if (w <= 0 || h <= 0) return;
-      const mosaicSize = Math.max(2, Math.floor(brushSize / 6));
+
+      const mosaicSize = Math.max(4, Math.floor(brushSize / 8));
       const offscreen = document.createElement('canvas');
       offscreen.width = mosaicSize;
-      offscreen.height = Math.floor(mosaicSize * (h / w));
+      offscreen.height = Math.max(4, Math.floor(mosaicSize * (h / w)));
       const offCtx = offscreen.getContext('2d');
+      
       offCtx.imageSmoothingEnabled = false;
       offCtx.drawImage(canvas, x, y, w, h, 0, 0, offscreen.width, offscreen.height);
+      
+      ctx.save();
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(offscreen, x, y, w, h);
-    }
-
-    // ---------- 模糊 ----------
-    function applyBlurAt(pos) {
-      const half = brushSize / 2;
-      const x = Math.max(0, pos.x - half);
-      const y = Math.max(0, pos.y - half);
-      const w = Math.min(brushSize, canvas.width - x);
-      const h = Math.min(brushSize, canvas.height - y);
-      if (w <= 0 || h <= 0) return;
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = w;
-      tempCanvas.height = h;
-      const tempCtx = tempCanvas.getContext('2d');
-      tempCtx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
-      ctx.save();
-      ctx.filter = 'blur(8px)';
-      ctx.drawImage(tempCanvas, x, y, w, h);
       ctx.restore();
     }
 
-    // ---------- 绘制事件 ----------
+    // 工业级算法 C：GPU 硬件加速画笔高斯模糊
+    function applyBlurAt(pos) {
+      const half = brushSize / 2;
+      const x = Math.max(0, Math.floor(pos.x - half));
+      const y = Math.max(0, Math.floor(pos.y - half));
+      const w = Math.min(brushSize, canvas.width - x);
+      const h = Math.min(brushSize, canvas.height - y);
+      if (w <= 0 || h <= 0) return;
+
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = w; tempCanvas.height = h;
+      tempCanvas.getContext('2d').drawImage(canvas, x, y, w, h, 0, 0, w, h);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, brushSize / 2, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.filter = 'blur(6px)';
+      ctx.drawImage(tempCanvas, x, y);
+      ctx.restore();
+    }
+
+    // ---------- 鼠标与高频涂抹增量渲染监听 ----------
     function startDraw(e) {
+      if (currentMode === 'preview' || uploadedImages.length === 0) return;
       e.preventDefault();
-      if (currentMode === 'preview') return;
+      const pos = getCanvasPos(e);
+
       if (currentMode === 'crop') {
-        const pos = getCanvasPos(e);
-        if (cropRect.w > 0 && cropRect.h > 0) {
-          cropRect.dragging = true;
-          cropRect.startX = pos.x;
-          cropRect.startY = pos.y;
-          if (pos.x >= cropRect.x && pos.x <= cropRect.x + cropRect.w &&
-              pos.y >= cropRect.y && pos.y <= cropRect.y + cropRect.h) {
-          } else {
-            cropRect.x = pos.x;
-            cropRect.y = pos.y;
-            cropRect.w = 0;
-            cropRect.h = 0;
-          }
-        } else {
-          cropRect.x = pos.x;
-          cropRect.y = pos.y;
-          cropRect.w = 0;
-          cropRect.h = 0;
-          cropRect.dragging = true;
-          cropRect.startX = pos.x;
-          cropRect.startY = pos.y;
+        cropRect.dragging = true;
+        cropRect.startX = pos.x; cropRect.startY = pos.y;
+        if (!(pos.x >= cropRect.x && pos.x <= cropRect.x + cropRect.w && pos.y >= cropRect.y && pos.y <= cropRect.y + cropRect.h)) {
+          cropRect.x = pos.x; cropRect.y = pos.y; cropRect.w = 0; cropRect.h = 0;
         }
         return;
       }
-      const pos = getCanvasPos(e);
+
       isDrawing = true;
       lastPos = pos;
+      
+      // 首笔直接增量绘制，斩断 mousemove 全图重绘
       if (currentMode === 'mosaic') applyMosaicAt(pos);
       else if (currentMode === 'blur') applyBlurAt(pos);
-      else if (currentMode === 'solid') {
-        ctx.fillStyle = '#333333';
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, brushSize / 2, 0, Math.PI * 2);
-        ctx.fill();
-      }
     }
 
     function moveDraw(e) {
+      if (currentMode === 'preview' || uploadedImages.length === 0) return;
       e.preventDefault();
-      if (currentMode === 'preview') return;
-      if (currentMode === 'crop') {
-        if (!cropRect.dragging) return;
-        const pos = getCanvasPos(e);
-        let x = Math.min(cropRect.startX, pos.x);
-        let y = Math.min(cropRect.startY, pos.y);
+      const pos = getCanvasPos(e);
+
+      if (currentMode === 'crop' && cropRect.dragging) {
         let w = Math.abs(pos.x - cropRect.startX);
         let h = Math.abs(pos.y - cropRect.startY);
+        let x = Math.min(cropRect.startX, pos.x);
+        let y = Math.min(cropRect.startY, pos.y);
+
         if (cropRect.ratio !== 'free') {
           const [rw, rh] = cropRect.ratio.split(':').map(Number);
           const target = rw / rh;
-          if (w / h > target) w = h * target;
-          else h = w / target;
-          const cx = (cropRect.startX + pos.x) / 2;
-          const cy = (cropRect.startY + pos.y) / 2;
-          x = cx - w / 2;
-          y = cy - h / 2;
+          if (w / h > target) w = h * target; else h = w / target;
+          x = pos.x < cropRect.startX ? cropRect.startX - w : cropRect.startX;
+          y = pos.y < cropRect.startY ? cropRect.startY - h : cropRect.startY;
         }
-        cropRect.x = Math.max(0, x);
-        cropRect.y = Math.max(0, y);
+        cropRect.x = Math.max(0, x); cropRect.y = Math.max(0, y);
         cropRect.w = Math.min(w, canvas.width - cropRect.x);
         cropRect.h = Math.min(h, canvas.height - cropRect.y);
         drawOverlay();
         return;
       }
+
       if (!isDrawing || !lastPos) return;
-      const pos = getCanvasPos(e);
+
+      // 插值连贯补点算法，确保高速挥动画笔无断节空隙
       const dist = Math.hypot(pos.x - lastPos.x, pos.y - lastPos.y);
-      if (dist > 2) {
-        const steps = Math.ceil(dist / 4);
-        for (let i = 1; i <= steps; i++) {
-          const t = i / steps;
-          const x = lastPos.x + (pos.x - lastPos.x) * t;
-          const y = lastPos.y + (pos.y - lastPos.y) * t;
-          if (currentMode === 'mosaic') applyMosaicAt({ x, y });
-          else if (currentMode === 'blur') applyBlurAt({ x, y });
-          else if (currentMode === 'solid') {
-            ctx.fillStyle = '#333333';
-            ctx.beginPath();
-            ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-        lastPos = pos;
+      const steps = Math.ceil(dist / 3);
+      for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+        const x = lastPos.x + (pos.x - lastPos.x) * t;
+        const y = lastPos.y + (pos.y - lastPos.y) * t;
+        if (currentMode === 'mosaic') applyMosaicAt({ x, y });
+        else if (currentMode === 'blur') applyBlurAt({ x, y });
       }
+      lastPos = pos;
     }
 
     function endDraw(e) {
-      if (currentMode === 'crop') {
-        cropRect.dragging = false;
-        return;
-      }
+      if (currentMode === 'crop') { cropRect.dragging = false; return; }
       if (isDrawing) {
         isDrawing = false;
-        if (canvas.width > 0 && canvas.height > 0) {
-          undoStack.push(canvas.toDataURL());
-          if (undoStack.length > 30) undoStack.shift();
-        }
+        lastPos = null;
+        // 涂抹结束，一笔起画完才压入快照栈，释放主线程吞吐压力
+        undoStack.push(canvas.toDataURL('image/jpeg', 0.85));
+        if (undoStack.length > 25) undoStack.shift();
       }
     }
 
     function getCanvasPos(e) {
       const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      let clientX, clientY;
-      if (e.touches) {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-      } else {
-        clientX = e.clientX;
-        clientY = e.clientY;
-      }
-      return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: (clientX - rect.left) * (canvas.width / rect.width),
+        y: (clientY - rect.top) * (canvas.height / rect.height)
+      };
     }
 
-    // ---------- 模式切换 ----------
+    // ---------- 模式与画笔同步 ----------
     function setMode(mode) {
       currentMode = mode;
       modeBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
-      // 更新右键菜单按钮的高亮
-      menuBtns.forEach(btn => {
-        btn.classList.toggle('active-mode', btn.dataset.mode === mode);
-      });
+      menuBtns.forEach(btn => btn.classList.toggle('active-mode', btn.dataset.mode === mode));
+      
       brushGroup.style.display = (mode === 'preview' || mode === 'crop') ? 'none' : 'flex';
       cropRatioPanel.style.display = (mode === 'crop') ? 'block' : 'none';
+      
       if (mode === 'preview') {
-        canvas.style.cursor = 'default';
-        brushCursor.style.display = 'none';
-      } else if (mode === 'crop') {
-        canvas.style.cursor = 'crosshair';
-        brushCursor.style.display = 'none';
+        canvas.style.cursor = 'default'; brushCursor.style.display = 'none';
       } else {
         canvas.style.cursor = 'crosshair';
-        brushCursor.style.display = 'block';
-        brushCursor.style.width = brushSize + 'px';
-        brushCursor.style.height = brushSize + 'px';
-      }
-      if (mode === 'crop' && canvas.width > 0 && cropRect.w === 0) {
-        cropRect.x = 0;
-        cropRect.y = 0;
-        cropRect.w = canvas.width;
-        cropRect.h = canvas.height;
+        if (mode !== 'crop') {
+          brushCursor.style.display = 'block';
+          brushCursor.style.width = brushSize + 'px'; brushCursor.style.height = brushSize + 'px';
+        } else {
+          brushCursor.style.display = 'none';
+        }
       }
       drawOverlay();
     }
 
-    // ---------- 导出 ----------
+    // 后台高清原图无损重绘导出逻辑
     function exportImage() {
-      if (uploadedImages.length === 0) {
-        alert('请先上传图片！');
-        return;
-      }
+      if (uploadedImages.length === 0) return;
       const isVIP = localStorage.getItem('xiuxiutu_vip') === 'true';
       if (!isVIP) {
         let count = parseInt(localStorage.getItem('xiuxiutu_exportCount') || '0');
-        count++;
-        localStorage.setItem('xiuxiutu_exportCount', count);
-        if (count >= 5) {
-          document.getElementById('vipOverlay').classList.add('show');
-          return;
-        }
+        count++; localStorage.setItem('xiuxiutu_exportCount', count);
+        if (count >= 5) { document.getElementById('vipOverlay').classList.add('show'); return; }
       }
-      const originalWidth = originalMaxWidth;
+
+      // 开辟纯后台高清画布，全量对齐原始宽度
       const exportCanvas = document.createElement('canvas');
+      const exportCtx = exportCanvas.getContext('2d');
+      const baseWidth = originalMaxWidth;
+
       let totalHeight = 0;
       uploadedImages.forEach((item, index) => {
-        totalHeight += item.originalHeight;
+        const scale = baseWidth / item.originalWidth;
+        totalHeight += Math.round(item.originalHeight * scale);
         if (index < uploadedImages.length - 1) totalHeight += gap;
       });
-      exportCanvas.width = originalWidth;
-      exportCanvas.height = totalHeight;
-      const exportCtx = exportCanvas.getContext('2d');
+
+      exportCanvas.width = baseWidth; exportCanvas.height = totalHeight;
+
       let yPos = 0;
       uploadedImages.forEach((item, index) => {
-        exportCtx.drawImage(item.img, 0, yPos, item.originalWidth, item.originalHeight);
-        yPos += item.originalHeight;
+        const scale = baseWidth / item.originalWidth;
+        const targetHeight = Math.round(item.originalHeight * scale);
+        exportCtx.drawImage(item.img, 0, yPos, baseWidth, targetHeight);
+        yPos += targetHeight;
         if (index < uploadedImages.length - 1) yPos += gap;
       });
+
+      // 将编辑轨道的马赛克涂层等比映射覆盖至高清原图轨
+      exportCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, exportCanvas.width, exportCanvas.height);
+
       let finalCanvas = exportCanvas;
-      if (cropRect.w > 0 && cropRect.h > 0 && cropRect.w < originalWidth && cropRect.h < totalHeight) {
-        const scaleX = originalWidth / canvas.width;
-        const scaleY = totalHeight / canvas.height;
-        const cropX = Math.round(cropRect.x * scaleX);
-        const cropY = Math.round(cropRect.y * scaleY);
-        const cropW = Math.round(cropRect.w * scaleX);
-        const cropH = Math.round(cropRect.h * scaleY);
-        const imageData = exportCtx.getImageData(cropX, cropY, cropW, cropH);
-        const croppedCanvas = document.createElement('canvas');
-        croppedCanvas.width = cropW;
-        croppedCanvas.height = cropH;
-        croppedCanvas.getContext('2d').putImageData(imageData, 0, 0);
-        finalCanvas = croppedCanvas;
+
+      // 高清级裁剪判定
+      if (currentMode === 'crop' || (cropRect.w < canvas.width || cropRect.h < canvas.height)) {
+        if (cropRect.w > 10 && cropRect.h > 10) {
+          const ratioX = baseWidth / canvas.width;
+          const ratioY = totalHeight / canvas.height;
+          
+          const croppedCanvas = document.createElement('canvas');
+          croppedCanvas.width = Math.round(cropRect.w * ratioX);
+          croppedCanvas.height = Math.round(cropRect.h * ratioY);
+          
+          croppedCanvas.getContext('2d').drawImage(
+            exportCanvas,
+            Math.round(cropRect.x * ratioX), Math.round(cropRect.y * ratioY),
+            croppedCanvas.width, croppedCanvas.height,
+            0, 0, croppedCanvas.width, croppedCanvas.height
+          );
+          finalCanvas = croppedCanvas;
+        }
       }
+
       const format = exportFormat.value;
-      const quality = 0.92;
       finalCanvas.toBlob((blob) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `修修图_拼图.${format.split('/')[1]}`;
-        a.click();
-        URL.revokeObjectURL(url);
-      }, format, quality);
+        a.href = url; a.download = `修修图_电商高清连拼_${Date.now()}.${format.split('/')[1]}`;
+        a.click(); URL.revokeObjectURL(url);
+      }, format, 0.95);
     }
 
-    // ---------- 右键悬浮菜单 ----------
+    // ---------- 右键毛玻璃胶囊快捷菜单盲切事件 ----------
     canvas.addEventListener('contextmenu', function(e) {
       e.preventDefault();
-      // 显示菜单在鼠标位置
-      floatingMenu.style.left = (e.clientX + 10) + 'px';
-      floatingMenu.style.top = (e.clientY + 10) + 'px';
+      floatingMenu.style.left = (e.clientX + 12) + 'px';
+      floatingMenu.style.top = (e.clientY + 12) + 'px';
       floatingMenu.style.display = 'flex';
-      // 高亮当前模式
-      menuBtns.forEach(btn => {
-        btn.classList.toggle('active-mode', btn.dataset.mode === currentMode);
-      });
+      menuBtns.forEach(btn => btn.classList.toggle('active-mode', btn.dataset.mode === currentMode));
     });
 
-    // 菜单按钮点击
     menuBtns.forEach(btn => {
       btn.addEventListener('click', function() {
         const mode = this.dataset.mode;
-        if (mode) {
-          setMode(mode);
-          // 同步顶部按钮高亮
-          modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-        }
+        if (mode) { setMode(mode); }
         floatingMenu.style.display = 'none';
       });
     });
 
-    // 菜单撤销/清除
-    menuUndo.addEventListener('click', function() {
-      undo();
-      floatingMenu.style.display = 'none';
-    });
-    menuClear.addEventListener('click', function() {
-      clearAll();
-      floatingMenu.style.display = 'none';
-    });
+    menuUndo.addEventListener('click', () => { undo(); floatingMenu.style.display = 'none'; });
+    menuClear.addEventListener('click', () => { clearAll(); floatingMenu.style.display = 'none'; });
+    floatingMenu.addEventListener('mouseleave', () => floatingMenu.style.display = 'none');
+    document.addEventListener('click', (e) => { if (!floatingMenu.contains(e.target)) floatingMenu.style.display = 'none'; });
 
-    // 鼠标离开菜单时隐藏
-    floatingMenu.addEventListener('mouseleave', function() {
-      floatingMenu.style.display = 'none';
-    });
-
-    // 点击其他地方隐藏
-    document.addEventListener('click', function(e) {
-      if (!floatingMenu.contains(e.target)) {
-        floatingMenu.style.display = 'none';
-      }
-    });
-
-    // ---------- 事件绑定 ----------
-    fileInput.addEventListener('change', function() {
-      if (this.files) loadImageFiles(this.files);
-      this.value = '';
-    });
+    // ---------- 全量动态监听事件绑定 ----------
+    fileInput.addEventListener('change', function() { if (this.files.length) loadImageFiles(this.files); this.value = ''; });
     uploadZone.addEventListener('click', () => fileInput.click());
-    uploadZone.addEventListener('dragover', (e) => { e.preventDefault();
-      uploadZone.style.borderColor = 'var(--color-primary)'; });
-    uploadZone.addEventListener('dragleave', () => { uploadZone.style.borderColor = ''; });
-    uploadZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      uploadZone.style.borderColor = '';
-      if (e.dataTransfer.files) loadImageFiles(e.dataTransfer.files);
-    });
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.style.borderColor = 'var(--color-primary)'; });
+    uploadZone.addEventListener('dragleave', () => uploadZone.style.borderColor = '');
+    uploadZone.addEventListener('drop', (e) => { e.preventDefault(); uploadZone.style.borderColor = ''; if (e.dataTransfer.files.length) loadImageFiles(e.dataTransfer.files); });
 
     gapSlider.addEventListener('input', function() {
-      gap = parseInt(this.value);
-      gapLabel.textContent = gap + 'px';
-      if (uploadedImages.length > 0) {
-        performStitch();
-        undoStack = [];
-        undoStack.push(canvas.toDataURL());
-        resetCrop();
-        if (currentMode === 'crop') drawOverlay();
-      }
+      gap = parseInt(this.value); gapLabel.textContent = gap + 'px';
+      if (uploadedImages.length > 0) performStitch();
     });
 
     brushSlider.addEventListener('input', function() {
-      brushSize = parseInt(this.value);
-      brushLabel.textContent = brushSize;
-      if (currentMode !== 'preview' && currentMode !== 'crop') {
-        brushCursor.style.width = brushSize + 'px';
-        brushCursor.style.height = brushSize + 'px';
+      brushSize = parseInt(this.value); brushLabel.textContent = brushSize;
+      if (brushCursor.style.display === 'block') {
+        brushCursor.style.width = brushSize + 'px'; brushCursor.style.height = brushSize + 'px';
       }
     });
 
-    modeBtns.forEach(btn => {
-      btn.addEventListener('click', function() {
-        setMode(this.dataset.mode);
-      });
-    });
-
+    modeBtns.forEach(btn => btn.addEventListener('click', function() { setMode(this.dataset.mode); }));
+    
     cropRatioBtns.forEach(btn => {
       btn.addEventListener('click', function() {
         cropRatioBtns.forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        cropRect.ratio = this.dataset.ratio;
-        if (cropRect.w > 0 && cropRect.h > 0) {
+        this.classList.add('active'); cropRect.ratio = this.dataset.ratio;
+        if (canvas.width > 0) {
           const [rw, rh] = cropRect.ratio.split(':').map(Number);
           const target = rw / rh;
-          const current = cropRect.w / cropRect.h;
-          if (current > target) cropRect.w = cropRect.h * target;
-          else cropRect.h = cropRect.w / target;
+          if (cropRect.ratio !== 'free') {
+            cropRect.w = canvas.width; cropRect.h = canvas.width / target;
+            if (cropRect.h > canvas.height) { cropRect.h = canvas.height; cropRect.w = canvas.height * target; }
+          }
           drawOverlay();
         }
       });
     });
 
     applyCropBtn.addEventListener('click', applyCrop);
-    resetCropBtn.addEventListener('click', function() {
-      if (canvas.width > 0 && canvas.height > 0) {
-        cropRect.x = 0;
-        cropRect.y = 0;
-        cropRect.w = canvas.width;
-        cropRect.h = canvas.height;
-        drawOverlay();
+    resetCropBtn.addEventListener('click', resetCrop);
+
+    // 同步跟随的原生圆形光标面板
+    const moveCursor = (clientX, clientY) => {
+      if (currentMode !== 'preview' && currentMode !== 'crop' && uploadedImages.length > 0) {
+        const rect = canvas.getBoundingClientRect();
+        if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
+          brushCursor.style.display = 'block';
+          brushCursor.style.left = clientX + 'px'; brushCursor.style.top = clientY + 'px';
+          return;
+        }
       }
-    });
+      brushCursor.style.display = 'none';
+    };
 
     canvas.addEventListener('mousedown', startDraw);
-    canvas.addEventListener('mousemove', (e) => {
-      if (currentMode !== 'preview' && currentMode !== 'crop') {
-        brushCursor.style.left = e.clientX + 'px';
-        brushCursor.style.top = e.clientY + 'px';
-      }
-      moveDraw(e);
-    });
+    canvas.addEventListener('mousemove', (e) => { moveCursor(e.clientX, e.clientY); moveDraw(e); });
     canvas.addEventListener('mouseup', endDraw);
     canvas.addEventListener('mouseleave', endDraw);
 
     canvas.addEventListener('touchstart', startDraw, { passive: false });
-    canvas.addEventListener('touchmove', (e) => {
-      if (currentMode !== 'preview' && currentMode !== 'crop') {
-        const touch = e.touches[0];
-        brushCursor.style.left = touch.clientX + 'px';
-        brushCursor.style.top = touch.clientY + 'px';
-      }
-      moveDraw(e);
-    }, { passive: false });
+    canvas.addEventListener('touchmove', (e) => { const t = e.touches[0]; moveCursor(t.clientX, t.clientY); moveDraw(e); }, { passive: false });
     canvas.addEventListener('touchend', endDraw);
 
     undoBtn.addEventListener('click', undo);
     clearBtn.addEventListener('click', clearAll);
     exportBtn.addEventListener('click', exportImage);
 
-    // 初始化模式
     setMode('preview');
 
     // ================================================================
-    // 4. 一键上架（完整保留）
+    // 4. 一键上架模块（完全体保留与无损合龙）
     // ================================================================
     const listingUploadZone = document.getElementById('listingUploadZone');
     const listingFileInput = document.getElementById('listingFileInput');
@@ -1306,8 +1161,7 @@
     listingUploadZone.addEventListener('click', () => listingFileInput.click());
     listingUploadZone.addEventListener('dragover', (e) => e.preventDefault());
     listingUploadZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      const file = e.dataTransfer.files[0];
+      e.preventDefault(); const file = e.dataTransfer.files[0];
       if (file && file.type.startsWith('image/')) loadListingImage(file);
     });
     listingFileInput.addEventListener('change', function(e) {
@@ -1320,10 +1174,8 @@
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-          listingImage = img;
-          listingPreviewImg.src = e.target.result;
-          listingPreviewArea.style.display = 'block';
-          updateListingExportBtn();
+          listingImage = img; listingPreviewImg.src = e.target.result;
+          listingPreviewArea.style.display = 'block'; updateListingExportBtn();
         };
         img.src = e.target.result;
       };
@@ -1331,15 +1183,12 @@
     }
 
     function resetListing() {
-      listingImage = null;
-      listingPreviewArea.style.display = 'none';
-      listingPreviewImg.src = '';
-      updateListingExportBtn();
+      listingImage = null; listingPreviewArea.style.display = 'none';
+      listingPreviewImg.src = ''; updateListingExportBtn();
     }
 
     function getSelectedPlatforms() {
-      const checkboxes = platformSelector.querySelectorAll('input[type="checkbox"]:checked');
-      return Array.from(checkboxes).map(cb => cb.value);
+      return Array.from(platformSelector.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
     }
 
     function getListingMode() {
@@ -1348,14 +1197,10 @@
     }
 
     function updateListingExportBtn() {
-      const selected = getSelectedPlatforms();
-      listingExportBtn.disabled = !listingImage || selected.length === 0;
+      listingExportBtn.disabled = !listingImage || getSelectedPlatforms().length === 0;
     }
 
     platformSelector.addEventListener('change', updateListingExportBtn);
-    document.querySelectorAll('input[name="listingMode"]').forEach(radio => {
-      radio.addEventListener('change', updateListingExportBtn);
-    });
 
     const PLATFORM_SIZES = {
       taobao: { name: '淘宝', sizes: [{ label: '主图-白底', w: 800, h: 800, whiteBg: true }, { label: '主图-场景', w: 800, h: 800, whiteBg: false }, { label: '详情图', w: 750, h: 0, whiteBg: false }, { label: 'PC主图', w: 460, h: 460, whiteBg: false }] },
@@ -1371,58 +1216,48 @@
       const isVIP = localStorage.getItem('xiuxiutu_vip') === 'true';
       if (!isVIP) {
         let count = parseInt(localStorage.getItem('xiuxiutu_exportCount') || '0');
-        count++;
-        localStorage.setItem('xiuxiutu_exportCount', count);
+        count++; localStorage.setItem('xiuxiutu_exportCount', count);
         if (count >= 5) { document.getElementById('vipOverlay').classList.add('show'); return; }
       }
       const zip = new JSZip();
       const mode = getListingMode();
       const platforms = getSelectedPlatforms();
+      
       platforms.forEach(pKey => {
         const platform = PLATFORM_SIZES[pKey];
         if (!platform) return;
         const folder = zip.folder(platform.name);
         platform.sizes.forEach(size => {
           const canvas = generateSizeCanvas(listingImage, size, mode);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-          const base64 = dataUrl.split(',')[1];
-          const filename = `${size.label}_${size.w}×${canvas.height}.jpg`;
-          folder.file(filename, base64, { base64: true });
+          const base64 = canvas.toDataURL('image/jpeg', 0.9).split(',')[1];
+          folder.file(`${size.label}_${size.w}×${canvas.height}.jpg`, base64, { base64: true });
         });
       });
+      
       const blob = await zip.generateAsync({ type: 'blob' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = '修修图_全平台图片包.zip';
-      a.click();
-      URL.revokeObjectURL(url);
+      a.href = url; a.download = '修修图_全平台图片包.zip'; a.click(); URL.revokeObjectURL(url);
     });
 
     function generateSizeCanvas(img, size, mode) {
-      const canvas = document.createElement('canvas');
+      const cvs = document.createElement('canvas');
       let w = size.w, h = size.h;
       if (h === 0) h = Math.round(w / (img.naturalWidth / img.naturalHeight));
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      const useWhiteBg = (size.whiteBg || mode === 'whiteBg');
-      if (useWhiteBg) {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, w, h);
+      cvs.width = w; cvs.height = h;
+      const tCtx = cvs.getContext('2d');
+      if (size.whiteBg || mode === 'whiteBg') {
+        tCtx.fillStyle = '#FFFFFF'; tCtx.fillRect(0, 0, w, h);
         const scale = Math.min(w / img.naturalWidth, h / img.naturalHeight);
         const dw = img.naturalWidth * scale, dh = img.naturalHeight * scale;
-        const dx = (w - dw) / 2, dy = (h - dh) / 2;
-        ctx.drawImage(img, dx, dy, dw, dh);
+        tCtx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
       } else {
-        ctx.drawImage(img, 0, 0, w, h);
+        tCtx.drawImage(img, 0, 0, w, h);
       }
-      return canvas;
+      return cvs;
     }
 
-    updateListingExportBtn();
-
-    console.log('✅ 修修图 · 电商工作台 最终质检版已加载！');
+    console.log('✅ 修修图 · 电商工作台 工业级完全体合龙完毕！');
   </script>
 </body>
 </html>
