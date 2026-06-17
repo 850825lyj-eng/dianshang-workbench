@@ -42,7 +42,7 @@
     }
     .container { max-width: 1200px; margin: 0 auto; padding: 20px 0; }
 
-    /* ---------- Header 中轴绝对对齐 ---------- */
+    /* ---------- Header ---------- */
     .navbar {
       display: flex;
       align-items: center;
@@ -81,7 +81,7 @@
     }
     .theme-toggle:hover { border-color: var(--color-primary); color: var(--color-primary); }
 
-    /* ---------- Banner（精简） ---------- */
+    /* ---------- Banner ---------- */
     .banner {
       text-align: center;
       padding: 14px 0 10px;
@@ -102,7 +102,7 @@
       font-size: 1rem;
     }
 
-    /* ---------- 卡片、工具面板 ---------- */
+    /* ---------- 卡片、工具 ---------- */
     .card {
       background: var(--bg-card);
       border: 1px solid var(--border-light);
@@ -147,7 +147,7 @@
     }
     .upload-zone:hover { border-color: var(--color-primary); background: rgba(6, 182, 212, 0.05); }
 
-    /* ========== 吸顶控制面板 ========== */
+    /* 吸顶控制面板 */
     .sticky-controls {
       position: sticky;
       top: var(--header-height);
@@ -159,15 +159,9 @@
       backdrop-filter: blur(4px);
       transition: background 0.25s, border-color 0.25s;
     }
-    .sticky-controls .thumb-list {
-      margin-bottom: 8px;
-    }
-    .sticky-controls .control-bar {
-      margin-top: 0;
-    }
-    .sticky-controls #cropRatioPanel {
-      margin-top: 8px;
-    }
+    .sticky-controls .thumb-list { margin-bottom: 8px; }
+    .sticky-controls .control-bar { margin-top: 0; }
+    .sticky-controls #cropRatioPanel { margin-top: 8px; }
 
     .thumb-list {
       display: flex;
@@ -326,6 +320,51 @@
       transform: translate(-50%, -50%);
       transition: width 0.1s, height 0.1s;
     }
+
+    /* ========== 右键悬浮毛玻璃菜单 ========== */
+    #floatingMenu {
+      position: fixed;
+      display: none;
+      background: rgba(20, 30, 50, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 60px;
+      padding: 8px 16px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      z-index: 2000;
+      gap: 8px;
+      align-items: center;
+      transition: opacity 0.15s;
+      pointer-events: auto;
+    }
+    #floatingMenu .menu-btn {
+      background: transparent;
+      border: none;
+      color: var(--color-text);
+      font-size: 1.1rem;
+      padding: 6px 10px;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    #floatingMenu .menu-btn:hover {
+      background: rgba(6, 182, 212, 0.2);
+      color: var(--color-primary);
+    }
+    #floatingMenu .menu-btn.active-mode {
+      background: var(--color-primary);
+      color: #0F172A;
+    }
+    #floatingMenu .menu-divider {
+      width: 1px;
+      height: 24px;
+      background: rgba(255,255,255,0.2);
+    }
   </style>
 </head>
 <body>
@@ -338,6 +377,16 @@
       <button class="btn btn-primary" onclick="activateVIP()">升级 VIP（免费体验）</button>
       <p style="margin-top:16px; font-size:0.8rem; color:var(--color-text-muted);">点击即解锁，仅保存在本设备</p>
     </div>
+  </div>
+
+  <!-- 右键悬浮菜单 -->
+  <div id="floatingMenu">
+    <button class="menu-btn" data-mode="preview">📐 预览</button>
+    <button class="menu-btn" data-mode="mosaic">🧩</button>
+    <button class="menu-btn" data-mode="blur">🌫️</button>
+    <div class="menu-divider"></div>
+    <button class="menu-btn" id="menuUndo">↩️</button>
+    <button class="menu-btn" id="menuClear">🗑️</button>
   </div>
 
   <!-- ========== 顶部导航 ========== -->
@@ -586,7 +635,7 @@
     })();
 
     // ================================================================
-    // 2. VIP 计费墙（导出次数限制）
+    // 2. VIP 计费墙
     // ================================================================
     (function initVIP() {
       const isVIP = localStorage.getItem('xiuxiutu_vip') === 'true';
@@ -608,7 +657,7 @@
     })();
 
     // ================================================================
-    // 3. 核心算法（完整无省略）
+    // 3. 核心算法（修正高度计算 + 右键菜单）
     // ================================================================
     let uploadedImages = [];
     let gap = 4;
@@ -645,6 +694,13 @@
     const toolStitch = document.getElementById('toolStitch');
     const toolListing = document.getElementById('toolListing');
 
+    // 右键菜单相关
+    const floatingMenu = document.getElementById('floatingMenu');
+    const menuBtns = floatingMenu.querySelectorAll('.menu-btn');
+    const menuUndo = document.getElementById('menuUndo');
+    const menuClear = document.getElementById('menuClear');
+
+    // ---------- 工具切换 ----------
     toolTabs.forEach(tab => {
       tab.addEventListener('click', function() {
         toolTabs.forEach(t => t.classList.remove('active'));
@@ -659,6 +715,7 @@
       });
     });
 
+    // ---------- 多图拼接（修正高度计算） ----------
     function performStitch() {
       if (uploadedImages.length === 0) {
         canvas.width = 0;
@@ -667,28 +724,44 @@
         updateThumbnails();
         return;
       }
+
+      // 1. 计算基准宽度（最大原始宽度）
       originalMaxWidth = Math.max(...uploadedImages.map(item => item.originalWidth));
       const targetWidth = Math.min(originalMaxWidth, editWidth);
-      canvas.width = targetWidth;
+
+      // 2. 计算总高度（基于缩放后的实际高度，四舍五入取整防止黑底）
       let totalHeight = 0;
-      uploadedImages.forEach(item => {
+      uploadedImages.forEach((item, index) => {
         const scale = targetWidth / item.originalWidth;
-        totalHeight += item.originalHeight * scale;
+        const targetHeight = Math.round(item.originalHeight * scale);
+        totalHeight += targetHeight;
+        if (index < uploadedImages.length - 1) {
+          totalHeight += gap;
+        }
       });
-      totalHeight += (uploadedImages.length - 1) * gap;
+
+      canvas.width = targetWidth;
       canvas.height = totalHeight;
+
+      // 3. 绘制（使用整数坐标和尺寸）
       let yPos = 0;
-      uploadedImages.forEach(item => {
+      uploadedImages.forEach((item, index) => {
         const scale = targetWidth / item.originalWidth;
-        const targetHeight = item.originalHeight * scale;
+        const targetHeight = Math.round(item.originalHeight * scale);
         ctx.drawImage(item.img, 0, yPos, targetWidth, targetHeight);
-        yPos += targetHeight + gap;
+        yPos += targetHeight;
+        if (index < uploadedImages.length - 1) {
+          yPos += gap;
+        }
       });
+
+      // 4. 保存初始状态
       undoStack.push(canvas.toDataURL());
       updateThumbnails();
       resetCrop();
     }
 
+    // ---------- 缩略图 ----------
     function updateThumbnails() {
       thumbList.innerHTML = '';
       uploadedImages.forEach((item, index) => {
@@ -718,6 +791,7 @@
       }
     }
 
+    // ---------- 加载图片 ----------
     function loadImageFiles(files) {
       for (let f of files) {
         if (!f.type.startsWith('image/')) continue;
@@ -743,6 +817,7 @@
       fileInput.value = '';
     }
 
+    // ---------- 撤销 ----------
     function undo() {
       if (undoStack.length <= 1) return;
       undoStack.pop();
@@ -758,6 +833,7 @@
       }
     }
 
+    // ---------- 清除 ----------
     function clearAll() {
       uploadedImages = [];
       canvas.width = 0;
@@ -769,6 +845,7 @@
       brushCursor.style.display = 'none';
     }
 
+    // ---------- 裁剪 ----------
     function resetCrop() {
       cropRect = { x: 0, y: 0, w: 0, h: 0, ratio: 'free', dragging: false, startX: 0, startY: 0 };
       if (canvas.width > 0 && canvas.height > 0) {
@@ -821,6 +898,7 @@
       setMode('preview');
     }
 
+    // ---------- 马赛克 ----------
     function applyMosaicAt(pos) {
       const half = brushSize / 2;
       const x = Math.max(0, pos.x - half);
@@ -839,6 +917,7 @@
       ctx.drawImage(offscreen, x, y, w, h);
     }
 
+    // ---------- 模糊 ----------
     function applyBlurAt(pos) {
       const half = brushSize / 2;
       const x = Math.max(0, pos.x - half);
@@ -857,6 +936,7 @@
       ctx.restore();
     }
 
+    // ---------- 绘制事件 ----------
     function startDraw(e) {
       e.preventDefault();
       if (currentMode === 'preview') return;
@@ -976,9 +1056,14 @@
       return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
     }
 
+    // ---------- 模式切换 ----------
     function setMode(mode) {
       currentMode = mode;
       modeBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
+      // 更新右键菜单按钮的高亮
+      menuBtns.forEach(btn => {
+        btn.classList.toggle('active-mode', btn.dataset.mode === mode);
+      });
       brushGroup.style.display = (mode === 'preview' || mode === 'crop') ? 'none' : 'flex';
       cropRatioPanel.style.display = (mode === 'crop') ? 'block' : 'none';
       if (mode === 'preview') {
@@ -1002,6 +1087,7 @@
       drawOverlay();
     }
 
+    // ---------- 导出 ----------
     function exportImage() {
       if (uploadedImages.length === 0) {
         alert('请先上传图片！');
@@ -1020,15 +1106,18 @@
       const originalWidth = originalMaxWidth;
       const exportCanvas = document.createElement('canvas');
       let totalHeight = 0;
-      uploadedImages.forEach(item => { totalHeight += item.originalHeight; });
-      totalHeight += (uploadedImages.length - 1) * gap;
+      uploadedImages.forEach((item, index) => {
+        totalHeight += item.originalHeight;
+        if (index < uploadedImages.length - 1) totalHeight += gap;
+      });
       exportCanvas.width = originalWidth;
       exportCanvas.height = totalHeight;
       const exportCtx = exportCanvas.getContext('2d');
       let yPos = 0;
-      uploadedImages.forEach(item => {
+      uploadedImages.forEach((item, index) => {
         exportCtx.drawImage(item.img, 0, yPos, item.originalWidth, item.originalHeight);
-        yPos += item.originalHeight + gap;
+        yPos += item.originalHeight;
+        if (index < uploadedImages.length - 1) yPos += gap;
       });
       let finalCanvas = exportCanvas;
       if (cropRect.w > 0 && cropRect.h > 0 && cropRect.w < originalWidth && cropRect.h < totalHeight) {
@@ -1057,6 +1146,55 @@
       }, format, quality);
     }
 
+    // ---------- 右键悬浮菜单 ----------
+    canvas.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      // 显示菜单在鼠标位置
+      floatingMenu.style.left = (e.clientX + 10) + 'px';
+      floatingMenu.style.top = (e.clientY + 10) + 'px';
+      floatingMenu.style.display = 'flex';
+      // 高亮当前模式
+      menuBtns.forEach(btn => {
+        btn.classList.toggle('active-mode', btn.dataset.mode === currentMode);
+      });
+    });
+
+    // 菜单按钮点击
+    menuBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const mode = this.dataset.mode;
+        if (mode) {
+          setMode(mode);
+          // 同步顶部按钮高亮
+          modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+        }
+        floatingMenu.style.display = 'none';
+      });
+    });
+
+    // 菜单撤销/清除
+    menuUndo.addEventListener('click', function() {
+      undo();
+      floatingMenu.style.display = 'none';
+    });
+    menuClear.addEventListener('click', function() {
+      clearAll();
+      floatingMenu.style.display = 'none';
+    });
+
+    // 鼠标离开菜单时隐藏
+    floatingMenu.addEventListener('mouseleave', function() {
+      floatingMenu.style.display = 'none';
+    });
+
+    // 点击其他地方隐藏
+    document.addEventListener('click', function(e) {
+      if (!floatingMenu.contains(e.target)) {
+        floatingMenu.style.display = 'none';
+      }
+    });
+
+    // ---------- 事件绑定 ----------
     fileInput.addEventListener('change', function() {
       if (this.files) loadImageFiles(this.files);
       this.value = '';
@@ -1151,6 +1289,7 @@
     clearBtn.addEventListener('click', clearAll);
     exportBtn.addEventListener('click', exportImage);
 
+    // 初始化模式
     setMode('preview');
 
     // ================================================================
@@ -1283,7 +1422,7 @@
 
     updateListingExportBtn();
 
-    console.log('✅ 修修图 · 电商工作台 最终吸顶布局+全算法已加载！');
+    console.log('✅ 修修图 · 电商工作台 最终质检版已加载！');
   </script>
 </body>
 </html>
