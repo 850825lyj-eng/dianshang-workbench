@@ -38,7 +38,7 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
       line-height: 1.6;
       transition: background 0.25s, color 0.25s;
-      padding: 0 16px 50px; /* 底部安全间距提升至 50px */
+      padding: 0 16px 50px;
     }
     .container { max-width: 1200px; margin: 0 auto; padding: 20px 0; }
 
@@ -107,7 +107,7 @@
       background: var(--bg-card);
       border: 1px solid var(--border-light);
       border-radius: 16px;
-      padding: 20px;
+      padding: 20px 16px;
       transition: box-shadow 0.2s, border-color 0.2s;
     }
     .btn {
@@ -147,14 +147,14 @@
     }
     .upload-zone:hover { border-color: var(--color-primary); background: rgba(6, 182, 212, 0.05); }
 
-    /* ========== 吸顶控制面板（sticky） ========== */
+    /* ========== 吸顶控制面板 ========== */
     .sticky-controls {
       position: sticky;
-      top: var(--header-height);  /* 紧贴导航栏下方 */
+      top: var(--header-height);
       z-index: 100;
       background: var(--bg-card);
       padding: 12px 0 8px;
-      margin: 0 -4px 16px -4px;  /* 抵消 card 的内边距，使背景撑满 */
+      margin: 0 -4px 16px -4px;
       border-bottom: 1px solid var(--border-light);
       backdrop-filter: blur(4px);
       transition: background 0.25s, border-color 0.25s;
@@ -169,7 +169,6 @@
       margin-top: 8px;
     }
 
-    /* 缩略图列表 */
     .thumb-list {
       display: flex;
       flex-wrap: wrap;
@@ -235,7 +234,7 @@
     }
     .crop-ratio-btn.active { border-color: var(--color-primary); color: var(--color-primary); background: rgba(6,182,212,0.08); }
 
-    /* Canvas 容器 —— 独立滚动 */
+    /* Canvas 容器 */
     .canvas-wrapper {
       margin-top: 16px;
       border-radius: 12px;
@@ -394,7 +393,7 @@
 
     <!-- ========== 工具面板 ========== -->
     <section id="tool">
-      <div class="card" style="padding:20px 16px;">
+      <div class="card">
         <!-- 标签页 -->
         <div style="display:flex; gap:12px; flex-wrap:wrap; border-bottom:1px solid var(--border-light); padding-bottom:12px; margin-bottom:16px;">
           <button class="btn tool-tab active" data-tool="stitch">📱 拼图 / 打码 / 裁剪</button>
@@ -403,7 +402,7 @@
 
         <!-- 拼图/打码/裁剪 -->
         <div id="toolStitch">
-          <!-- 上传区（不固定，滚动走） -->
+          <!-- 上传区 -->
           <div class="upload-zone" id="uploadZone">
             <div style="font-size:3rem;">📁</div>
             <p style="font-weight:600; color:var(--color-text);">点击或拖拽图片到此处</p>
@@ -466,7 +465,7 @@
           </div>
           <!-- ===== 吸顶控制面板结束 ===== -->
 
-          <!-- Canvas 容器（独立滚动） -->
+          <!-- Canvas 容器 -->
           <div class="canvas-wrapper">
             <canvas id="mainCanvas"></canvas>
           </div>
@@ -609,11 +608,9 @@
     })();
 
     // ================================================================
-    // 3. 核心算法 —— 编辑缩放、多图拼接、局部涂抹、撤销栈、导出高清
+    // 3. 核心算法（完整无省略）
     // ================================================================
-
-    // ---------- 全局状态 ----------
-    let uploadedImages = [];          // 存储 { img, src, name, originalWidth, originalHeight }
+    let uploadedImages = [];
     let gap = 4;
     let currentMode = 'preview';
     let brushSize = 30;
@@ -621,11 +618,9 @@
     let isDrawing = false;
     let lastPos = null;
     let cropRect = { x: 0, y: 0, w: 0, h: 0, ratio: 'free', dragging: false, startX: 0, startY: 0 };
-    let editWidth = 1600;             // 编辑画布最大宽度（防爆显存）
-    let originalMaxWidth = 0;         // 原始图片最大宽度（用于导出）
-    let scaleFactor = 1;              // originalMaxWidth / editWidth
+    let editWidth = 1600;
+    let originalMaxWidth = 0;
 
-    // DOM 引用
     const canvas = document.getElementById('mainCanvas');
     const ctx = canvas.getContext('2d');
     const fileInput = document.getElementById('fileInput');
@@ -650,7 +645,6 @@
     const toolStitch = document.getElementById('toolStitch');
     const toolListing = document.getElementById('toolListing');
 
-    // ---------- 工具切换 ----------
     toolTabs.forEach(tab => {
       tab.addEventListener('click', function() {
         toolTabs.forEach(t => t.classList.remove('active'));
@@ -665,7 +659,6 @@
       });
     });
 
-    // ---------- 多图拼接（编辑用，缩放至 editWidth） ----------
     function performStitch() {
       if (uploadedImages.length === 0) {
         canvas.width = 0;
@@ -674,44 +667,28 @@
         updateThumbnails();
         return;
       }
-
-      // 计算原始最大宽度
       originalMaxWidth = Math.max(...uploadedImages.map(item => item.originalWidth));
-      // 编辑宽度 = min(原始最大宽度, editWidth)
       const targetWidth = Math.min(originalMaxWidth, editWidth);
-      scaleFactor = originalMaxWidth / targetWidth; // 用于导出时映射坐标
-
       canvas.width = targetWidth;
-
-      // 计算总高度（缩放后）
       let totalHeight = 0;
-      const scaledHeights = [];
       uploadedImages.forEach(item => {
         const scale = targetWidth / item.originalWidth;
-        const targetHeight = item.originalHeight * scale;
-        scaledHeights.push(targetHeight);
-        totalHeight += targetHeight;
+        totalHeight += item.originalHeight * scale;
       });
       totalHeight += (uploadedImages.length - 1) * gap;
       canvas.height = totalHeight;
-
-      // 绘制缩放后的拼图
       let yPos = 0;
-      uploadedImages.forEach((item, index) => {
+      uploadedImages.forEach(item => {
         const scale = targetWidth / item.originalWidth;
         const targetHeight = item.originalHeight * scale;
         ctx.drawImage(item.img, 0, yPos, targetWidth, targetHeight);
         yPos += targetHeight + gap;
       });
-
-      // 保存初始状态到撤销栈（缩放后的状态）
       undoStack.push(canvas.toDataURL());
-
       updateThumbnails();
       resetCrop();
     }
 
-    // ---------- 缩略图 ----------
     function updateThumbnails() {
       thumbList.innerHTML = '';
       uploadedImages.forEach((item, index) => {
@@ -737,13 +714,10 @@
         uploadedImages.splice(index, 1);
         performStitch();
         undoStack = [];
-        if (canvas.width > 0 && canvas.height > 0) {
-          undoStack.push(canvas.toDataURL());
-        }
+        if (canvas.width > 0 && canvas.height > 0) undoStack.push(canvas.toDataURL());
       }
     }
 
-    // ---------- 加载图片 ----------
     function loadImageFiles(files) {
       for (let f of files) {
         if (!f.type.startsWith('image/')) continue;
@@ -751,20 +725,16 @@
         reader.onload = (e) => {
           const img = new Image();
           img.onload = () => {
-            const originalWidth = img.width;
-            const originalHeight = img.height;
             uploadedImages.push({
               img: img,
               src: e.target.result,
               name: f.name,
-              originalWidth: originalWidth,
-              originalHeight: originalHeight
+              originalWidth: img.width,
+              originalHeight: img.height
             });
             performStitch();
             undoStack = [];
-            if (canvas.width > 0 && canvas.height > 0) {
-              undoStack.push(canvas.toDataURL());
-            }
+            if (canvas.width > 0 && canvas.height > 0) undoStack.push(canvas.toDataURL());
           };
           img.src = e.target.result;
         };
@@ -773,7 +743,6 @@
       fileInput.value = '';
     }
 
-    // ---------- 撤销 ----------
     function undo() {
       if (undoStack.length <= 1) return;
       undoStack.pop();
@@ -789,7 +758,6 @@
       }
     }
 
-    // ---------- 清除 ----------
     function clearAll() {
       uploadedImages = [];
       canvas.width = 0;
@@ -801,7 +769,6 @@
       brushCursor.style.display = 'none';
     }
 
-    // ---------- 裁剪 ----------
     function resetCrop() {
       cropRect = { x: 0, y: 0, w: 0, h: 0, ratio: 'free', dragging: false, startX: 0, startY: 0 };
       if (canvas.width > 0 && canvas.height > 0) {
@@ -831,15 +798,10 @@
           ctx.setLineDash([6, 4]);
           ctx.strokeRect(x, y, w, h);
           ctx.setLineDash([]);
-          const corners = [
-            [x, y],
-            [x + w, y],
-            [x, y + h],
-            [x + w, y + h]
-          ];
-          corners.forEach(([cx, cy]) => {
+          const corners = [[x,y],[x+w,y],[x,y+h],[x+w,y+h]];
+          corners.forEach(([cx,cy]) => {
             ctx.fillStyle = '#06B6D4';
-            ctx.fillRect(cx - 4, cy - 4, 8, 8);
+            ctx.fillRect(cx-4, cy-4, 8, 8);
           });
         }
       };
@@ -859,7 +821,6 @@
       setMode('preview');
     }
 
-    // ---------- 马赛克（离屏缩放颗粒法） ----------
     function applyMosaicAt(pos) {
       const half = brushSize / 2;
       const x = Math.max(0, pos.x - half);
@@ -867,8 +828,6 @@
       const w = Math.min(brushSize, canvas.width - x);
       const h = Math.min(brushSize, canvas.height - y);
       if (w <= 0 || h <= 0) return;
-
-      // 离屏缩放产生颗粒
       const mosaicSize = Math.max(2, Math.floor(brushSize / 6));
       const offscreen = document.createElement('canvas');
       offscreen.width = mosaicSize;
@@ -876,13 +835,10 @@
       const offCtx = offscreen.getContext('2d');
       offCtx.imageSmoothingEnabled = false;
       offCtx.drawImage(canvas, x, y, w, h, 0, 0, offscreen.width, offscreen.height);
-
-      // 放大回原区域
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(offscreen, x, y, w, h);
     }
 
-    // ---------- 模糊（GPU 加速 filter） ----------
     function applyBlurAt(pos) {
       const half = brushSize / 2;
       const x = Math.max(0, pos.x - half);
@@ -890,22 +846,17 @@
       const w = Math.min(brushSize, canvas.width - x);
       const h = Math.min(brushSize, canvas.height - y);
       if (w <= 0 || h <= 0) return;
-
-      // 截取局部图像到离屏 canvas
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = w;
       tempCanvas.height = h;
       const tempCtx = tempCanvas.getContext('2d');
       tempCtx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
-
-      // 应用 GPU 模糊滤镜
       ctx.save();
       ctx.filter = 'blur(8px)';
       ctx.drawImage(tempCanvas, x, y, w, h);
       ctx.restore();
     }
 
-    // ---------- 绘制事件 ----------
     function startDraw(e) {
       e.preventDefault();
       if (currentMode === 'preview') return;
@@ -916,8 +867,7 @@
           cropRect.startX = pos.x;
           cropRect.startY = pos.y;
           if (pos.x >= cropRect.x && pos.x <= cropRect.x + cropRect.w &&
-            pos.y >= cropRect.y && pos.y <= cropRect.y + cropRect.h) {
-            // 拖拽整个框
+              pos.y >= cropRect.y && pos.y <= cropRect.y + cropRect.h) {
           } else {
             cropRect.x = pos.x;
             cropRect.y = pos.y;
@@ -935,16 +885,12 @@
         }
         return;
       }
-
-      // 打码模式
       const pos = getCanvasPos(e);
       isDrawing = true;
       lastPos = pos;
-      if (currentMode === 'mosaic') {
-        applyMosaicAt(pos);
-      } else if (currentMode === 'blur') {
-        applyBlurAt(pos);
-      } else if (currentMode === 'solid') {
+      if (currentMode === 'mosaic') applyMosaicAt(pos);
+      else if (currentMode === 'blur') applyBlurAt(pos);
+      else if (currentMode === 'solid') {
         ctx.fillStyle = '#333333';
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, brushSize / 2, 0, Math.PI * 2);
@@ -976,7 +922,7 @@
         cropRect.y = Math.max(0, y);
         cropRect.w = Math.min(w, canvas.width - cropRect.x);
         cropRect.h = Math.min(h, canvas.height - cropRect.y);
-        drawOverlay(); // 裁剪模式下重绘
+        drawOverlay();
         return;
       }
       if (!isDrawing || !lastPos) return;
@@ -988,11 +934,9 @@
           const t = i / steps;
           const x = lastPos.x + (pos.x - lastPos.x) * t;
           const y = lastPos.y + (pos.y - lastPos.y) * t;
-          if (currentMode === 'mosaic') {
-            applyMosaicAt({ x, y });
-          } else if (currentMode === 'blur') {
-            applyBlurAt({ x, y });
-          } else if (currentMode === 'solid') {
+          if (currentMode === 'mosaic') applyMosaicAt({ x, y });
+          else if (currentMode === 'blur') applyBlurAt({ x, y });
+          else if (currentMode === 'solid') {
             ctx.fillStyle = '#333333';
             ctx.beginPath();
             ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
@@ -1000,7 +944,6 @@
           }
         }
         lastPos = pos;
-        // 涂抹模式下不调用 drawOverlay，只做局部修改
       }
     }
 
@@ -1011,16 +954,13 @@
       }
       if (isDrawing) {
         isDrawing = false;
-        // 每次绘制结束，保存状态到撤销栈
         if (canvas.width > 0 && canvas.height > 0) {
           undoStack.push(canvas.toDataURL());
           if (undoStack.length > 30) undoStack.shift();
         }
-        // 不需要重绘整图
       }
     }
 
-    // ---------- 辅助 ----------
     function getCanvasPos(e) {
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
@@ -1033,13 +973,9 @@
         clientX = e.clientX;
         clientY = e.clientY;
       }
-      return {
-        x: (clientX - rect.left) * scaleX,
-        y: (clientY - rect.top) * scaleY
-      };
+      return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
     }
 
-    // ---------- 模式切换 ----------
     function setMode(mode) {
       currentMode = mode;
       modeBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
@@ -1063,16 +999,14 @@
         cropRect.w = canvas.width;
         cropRect.h = canvas.height;
       }
-      drawOverlay(); // 切换到裁剪模式时显示裁剪框
+      drawOverlay();
     }
 
-    // ---------- 导出（高清，基于原始尺寸） ----------
     function exportImage() {
       if (uploadedImages.length === 0) {
         alert('请先上传图片！');
         return;
       }
-      // VIP 检查
       const isVIP = localStorage.getItem('xiuxiutu_vip') === 'true';
       if (!isVIP) {
         let count = parseInt(localStorage.getItem('xiuxiutu_exportCount') || '0');
@@ -1083,50 +1017,34 @@
           return;
         }
       }
-
-      // 1. 创建原始尺寸的画布
       const originalWidth = originalMaxWidth;
       const exportCanvas = document.createElement('canvas');
-      // 计算原始总高度
       let totalHeight = 0;
-      uploadedImages.forEach(item => {
-        totalHeight += item.originalHeight;
-      });
+      uploadedImages.forEach(item => { totalHeight += item.originalHeight; });
       totalHeight += (uploadedImages.length - 1) * gap;
       exportCanvas.width = originalWidth;
       exportCanvas.height = totalHeight;
       const exportCtx = exportCanvas.getContext('2d');
-
-      // 2. 按原始尺寸拼接所有图片
       let yPos = 0;
       uploadedImages.forEach(item => {
         exportCtx.drawImage(item.img, 0, yPos, item.originalWidth, item.originalHeight);
         yPos += item.originalHeight + gap;
       });
-
-      // 3. 如果有裁剪框，应用裁剪
       let finalCanvas = exportCanvas;
-      let finalCtx = exportCtx;
       if (cropRect.w > 0 && cropRect.h > 0 && cropRect.w < originalWidth && cropRect.h < totalHeight) {
-        // 映射裁剪坐标到原始尺寸
         const scaleX = originalWidth / canvas.width;
-        const scaleY = (totalHeight) / canvas.height; // 注意 canvas.height 是编辑高度
+        const scaleY = totalHeight / canvas.height;
         const cropX = Math.round(cropRect.x * scaleX);
         const cropY = Math.round(cropRect.y * scaleY);
         const cropW = Math.round(cropRect.w * scaleX);
         const cropH = Math.round(cropRect.h * scaleY);
-        // 裁剪
         const imageData = exportCtx.getImageData(cropX, cropY, cropW, cropH);
         const croppedCanvas = document.createElement('canvas');
         croppedCanvas.width = cropW;
         croppedCanvas.height = cropH;
-        const croppedCtx = croppedCanvas.getContext('2d');
-        croppedCtx.putImageData(imageData, 0, 0);
+        croppedCanvas.getContext('2d').putImageData(imageData, 0, 0);
         finalCanvas = croppedCanvas;
-        finalCtx = croppedCtx;
       }
-
-      // 4. 导出
       const format = exportFormat.value;
       const quality = 0.92;
       finalCanvas.toBlob((blob) => {
@@ -1139,7 +1057,6 @@
       }, format, quality);
     }
 
-    // ---------- 事件绑定 ----------
     fileInput.addEventListener('change', function() {
       if (this.files) loadImageFiles(this.files);
       this.value = '';
@@ -1208,7 +1125,6 @@
       }
     });
 
-    // ----- Canvas 交互事件 -----
     canvas.addEventListener('mousedown', startDraw);
     canvas.addEventListener('mousemove', (e) => {
       if (currentMode !== 'preview' && currentMode !== 'crop') {
@@ -1235,11 +1151,10 @@
     clearBtn.addEventListener('click', clearAll);
     exportBtn.addEventListener('click', exportImage);
 
-    // 初始化
     setMode('preview');
 
     // ================================================================
-    // 4. 一键上架（完整保留，与主拼图独立）
+    // 4. 一键上架（完整保留）
     // ================================================================
     const listingUploadZone = document.getElementById('listingUploadZone');
     const listingFileInput = document.getElementById('listingFileInput');
@@ -1347,8 +1262,7 @@
 
     function generateSizeCanvas(img, size, mode) {
       const canvas = document.createElement('canvas');
-      let w = size.w,
-        h = size.h;
+      let w = size.w, h = size.h;
       if (h === 0) h = Math.round(w / (img.naturalWidth / img.naturalHeight));
       canvas.width = w;
       canvas.height = h;
@@ -1358,10 +1272,8 @@
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, w, h);
         const scale = Math.min(w / img.naturalWidth, h / img.naturalHeight);
-        const dw = img.naturalWidth * scale,
-          dh = img.naturalHeight * scale;
-        const dx = (w - dw) / 2,
-          dy = (h - dh) / 2;
+        const dw = img.naturalWidth * scale, dh = img.naturalHeight * scale;
+        const dx = (w - dw) / 2, dy = (h - dh) / 2;
         ctx.drawImage(img, dx, dy, dw, dh);
       } else {
         ctx.drawImage(img, 0, 0, w, h);
