@@ -576,11 +576,11 @@
     })();
 
     // ================================================================
-    // 3. 核心状态与算法
+    // 3. 核心算法 —— 编辑缩放、多图拼接、局部涂抹、撤销栈、导出高清
     // ================================================================
 
     // ---------- 全局状态 ----------
-    let uploadedImages = [];          // 存储 { img, src, name }
+    let uploadedImages = [];          // 存储 { img, src, name, originalWidth, originalHeight }
     let gap = 4;
     let currentMode = 'preview';
     let brushSize = 30;
@@ -588,11 +588,13 @@
     let isDrawing = false;
     let lastPos = null;
     let cropRect = { x: 0, y: 0, w: 0, h: 0, ratio: 'free', dragging: false, startX: 0, startY: 0 };
+    let editWidth = 1600;             // 编辑画布最大宽度（防爆显存）
+    let originalMaxWidth = 0;         // 原始图片最大宽度（用于导出）
+    let scaleFactor = 1;              // originalMaxWidth / editWidth
 
-    // DOM 元素
+    // DOM 引用
     const canvas = document.getElementById('mainCanvas');
     const ctx = canvas.getContext('2d');
-    const canvasWrapper = document.querySelector('.canvas-wrapper');
     const fileInput = document.getElementById('fileInput');
     const uploadZone = document.getElementById('uploadZone');
     const thumbList = document.getElementById('thumbList');
@@ -630,7 +632,7 @@
       });
     });
 
-    // ---------- 多图拼接（横向等比自适应，彻底消灭右侧黑底） ----------
+    // ---------- 多图拼接（编辑用，缩放至 editWidth） ----------
     function performStitch() {
       if (uploadedImages.length === 0) {
         canvas.width = 0;
@@ -640,32 +642,36 @@
         return;
       }
 
-      // 1. 计算所有图片的最大宽度作为 canvas 宽度
-      const maxWidth = Math.max(...uploadedImages.map(item => item.img.width));
-      canvas.width = maxWidth;
+      // 计算原始最大宽度
+      originalMaxWidth = Math.max(...uploadedImages.map(item => item.originalWidth));
+      // 编辑宽度 = min(原始最大宽度, editWidth)
+      const targetWidth = Math.min(originalMaxWidth, editWidth);
+      scaleFactor = originalMaxWidth / targetWidth; // 用于导出时映射坐标
 
-      // 2. 计算总高度（每张图按比例缩放）
+      canvas.width = targetWidth;
+
+      // 计算总高度（缩放后）
       let totalHeight = 0;
       const scaledHeights = [];
       uploadedImages.forEach(item => {
-        const scale = maxWidth / item.img.width;
-        const targetHeight = item.img.height * scale;
+        const scale = targetWidth / item.originalWidth;
+        const targetHeight = item.originalHeight * scale;
         scaledHeights.push(targetHeight);
         totalHeight += targetHeight;
       });
       totalHeight += (uploadedImages.length - 1) * gap;
       canvas.height = totalHeight;
 
-      // 3. 垂直拼接绘制（全部横向撑满）
+      // 绘制缩放后的拼图
       let yPos = 0;
       uploadedImages.forEach((item, index) => {
-        const scale = maxWidth / item.img.width;
-        const targetHeight = item.img.height * scale;
-        ctx.drawImage(item.img, 0, yPos, maxWidth, targetHeight);
+        const scale = targetWidth / item.originalWidth;
+        const targetHeight = item.originalHeight * scale;
+        ctx.drawImage(item.img, 0, yPos, targetWidth, targetHeight);
         yPos += targetHeight + gap;
       });
 
-      // 4. 保存初始状态到撤销栈
+      // 保存初始状态到撤销栈（缩放后的状态）
       undoStack.push(canvas.toDataURL());
 
       updateThumbnails();
@@ -712,7 +718,15 @@
         reader.onload = (e) => {
           const img = new Image();
           img.onload = () => {
-            uploadedImages.push({ img, src: e.target.result, name: f.name });
+            const originalWidth = img.width;
+            const originalHeight = img.height;
+            uploadedImages.push({
+              img: img,
+              src: e.target.result,
+              name: f.name,
+              originalWidth: originalWidth,
+              originalHeight: originalHeight
+            });
             performStitch();
             undoStack = [];
             if (canvas.width > 0 && canvas.height > 0) {
@@ -765,6 +779,31 @@
     }
 
     function drawOverlay() {
+      // 仅在裁剪模式或需要显示裁剪框时调用，但我们现在只在裁剪模式下绘制裁剪框，且不重绘整张底图
+      // 但为了显示裁剪框，我们需要在现有画布上叠加绘制，不能清除已有内容。
+      // 策略：在绘制裁剪框前，不重新绘制底图，只加一层半透明遮罩和框线。
+      // 但之前我们是在 drawOverlay 中重绘整个画布，这是性能杀手。
+      // 现在我们改为：在裁剪模式下，直接在当前画布上绘制遮罩和框线，而不重新绘制底图。
+      // 但为了撤销栈的一致性，我们最好在裁剪时也保存状态。但裁剪框只是辅助显示，不修改像素，所以可以不保存到栈。
+      // 因此，我们实现一个独立的绘制裁剪框函数，不干扰画布内容。
+      // 但为了简单且不破坏之前的逻辑，我们采用这种方式：在裁剪模式下，当用户调整裁剪框时，我们直接在画布上绘制，但不清除原有内容。
+      // 然而，由于我们不再在 mousemove 中调用 drawOverlay 重绘，我们只需要在裁剪框变化时重新绘制裁剪框即可。
+      // 这里我们使用一个独立的图层或直接在画布上绘制（但注意不要覆盖底图）。
+      // 更好的做法：每次绘制裁剪框前，先保存当前画布内容，然后绘制遮罩，但这样会丢失底图。
+      // 我们采用最稳妥的方式：在裁剪模式下，每次重新绘制裁剪框时，先恢复底图（从 undoStack 最新状态），再绘制遮罩。
+      // 但为了性能，我们仅在 mousedown/mouseup 时更新裁剪框，mousemove 时只修改 cropRect 坐标，然后重绘裁剪框（即重新画遮罩）。
+      // 方法：在裁剪模式下，mousemove 中调用 drawCropOverlay()，该函数先清除画布，然后从 undoStack 最新状态恢复底图，再绘制遮罩。
+      // 但这样仍会重绘整张底图，但只在裁剪模式下，且 mousemove 频率低，可以接受。
+      // 但为了与涂抹优化一致，我们最好避免在 mousemove 中重绘整图。但裁剪框调整是低频操作，可以接受。
+      // 我们优化一下：只在裁剪模式下，每次更新裁剪框时，用以下方式：
+      // 1. 从 undoStack 最新状态恢复底图（drawImage）
+      // 2. 绘制遮罩和框线。
+      // 这样虽然在 mousemove 中重绘整图，但裁剪模式不像涂抹那样高频，且用户不会在裁剪时疯狂移动鼠标，所以性能影响可控。
+      // 因此，我们保留 drawOverlay 的重绘机制，但仅在裁剪模式下调用，且 mousemove 中调用时，频率低。
+      // 而在涂抹模式下，我们禁止调用 drawOverlay。
+      // 所以我们修改 moveDraw：当 currentMode === 'crop' 时调用 drawOverlay，否则不调用。
+      // 在涂抹模式下，我们只做局部修改，不重绘整图。
+      // 这样既保证了裁剪框的显示，又避免了涂抹时的卡顿。
       if (undoStack.length === 0) return;
       const currentState = undoStack[undoStack.length - 1];
       if (!currentState) return;
@@ -812,7 +851,7 @@
       setMode('preview');
     }
 
-    // ---------- 马赛克（高性能局部离屏缩放） ----------
+    // ---------- 马赛克（离屏缩放颗粒法） ----------
     function applyMosaicAt(pos) {
       const half = brushSize / 2;
       const x = Math.max(0, pos.x - half);
@@ -821,11 +860,8 @@
       const h = Math.min(brushSize, canvas.height - y);
       if (w <= 0 || h <= 0) return;
 
-      // 1. 提取局部图像
-      const srcData = ctx.getImageData(x, y, w, h);
-
-      // 2. 创建离屏 canvas，进行缩放产生马赛克
-      const mosaicSize = Math.max(2, Math.floor(brushSize / 6)); // 颗粒大小
+      // 离屏缩放产生颗粒
+      const mosaicSize = Math.max(2, Math.floor(brushSize / 6));
       const offscreen = document.createElement('canvas');
       offscreen.width = mosaicSize;
       offscreen.height = Math.floor(mosaicSize * (h / w));
@@ -833,12 +869,35 @@
       offCtx.imageSmoothingEnabled = false;
       offCtx.drawImage(canvas, x, y, w, h, 0, 0, offscreen.width, offscreen.height);
 
-      // 3. 将颗粒化图像放大回原区域（产生马赛克）
+      // 放大回原区域
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(offscreen, x, y, w, h);
     }
 
-    // ---------- 绘制事件（统一使用局部马赛克） ----------
+    // ---------- 模糊（GPU 加速 filter） ----------
+    function applyBlurAt(pos) {
+      const half = brushSize / 2;
+      const x = Math.max(0, pos.x - half);
+      const y = Math.max(0, pos.y - half);
+      const w = Math.min(brushSize, canvas.width - x);
+      const h = Math.min(brushSize, canvas.height - y);
+      if (w <= 0 || h <= 0) return;
+
+      // 截取局部图像到离屏 canvas
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = w;
+      tempCanvas.height = h;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
+
+      // 应用 GPU 模糊滤镜
+      ctx.save();
+      ctx.filter = 'blur(8px)';
+      ctx.drawImage(tempCanvas, x, y, w, h);
+      ctx.restore();
+    }
+
+    // ---------- 绘制事件 ----------
     function startDraw(e) {
       e.preventDefault();
       if (currentMode === 'preview') return;
@@ -869,16 +928,13 @@
         return;
       }
 
-      // 打码模式（马赛克/模糊/纯色）
+      // 打码模式
       const pos = getCanvasPos(e);
       isDrawing = true;
       lastPos = pos;
-      // 如果马赛克模式，直接调用局部马赛克算法
       if (currentMode === 'mosaic') {
         applyMosaicAt(pos);
-        // 马赛克绘制后立即保存状态到栈（在 endDraw 中统一保存）
       } else if (currentMode === 'blur') {
-        // 模糊采用传统方式（但仅操作局部，不是全画布，性能可接受）
         applyBlurAt(pos);
       } else if (currentMode === 'solid') {
         ctx.fillStyle = '#333333';
@@ -912,7 +968,7 @@
         cropRect.y = Math.max(0, y);
         cropRect.w = Math.min(w, canvas.width - cropRect.x);
         cropRect.h = Math.min(h, canvas.height - cropRect.y);
-        drawOverlay();
+        drawOverlay(); // 裁剪模式下重绘
         return;
       }
       if (!isDrawing || !lastPos) return;
@@ -936,7 +992,7 @@
           }
         }
         lastPos = pos;
-        drawOverlay();
+        // 涂抹模式下不调用 drawOverlay，只做局部修改
       }
     }
 
@@ -952,48 +1008,8 @@
           undoStack.push(canvas.toDataURL());
           if (undoStack.length > 30) undoStack.shift();
         }
-        drawOverlay();
+        // 不需要重绘整图
       }
-    }
-
-    // ---------- 模糊（局部） ----------
-    function applyBlurAt(pos) {
-      const half = brushSize / 2;
-      const x = Math.max(0, pos.x - half);
-      const y = Math.max(0, pos.y - half);
-      const w = Math.min(brushSize, canvas.width - x);
-      const h = Math.min(brushSize, canvas.height - y);
-      if (w <= 0 || h <= 0) return;
-      const imageData = ctx.getImageData(x, y, w, h);
-      const data = imageData.data;
-      const radius = Math.max(1, Math.floor(brushSize / 20));
-      const temp = new Uint8ClampedArray(data);
-      for (let py = 0; py < h; py++) {
-        for (let px = 0; px < w; px++) {
-          let r = 0,
-            g = 0,
-            b = 0,
-            count = 0;
-          for (let dy = -radius; dy <= radius; dy++) {
-            for (let dx = -radius; dx <= radius; dx++) {
-              const nx = px + dx,
-                ny = py + dy;
-              if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
-                const idx = (ny * w + nx) * 4;
-                r += data[idx];
-                g += data[idx + 1];
-                b += data[idx + 2];
-                count++;
-              }
-            }
-          }
-          const idx = (py * w + px) * 4;
-          temp[idx] = r / count;
-          temp[idx + 1] = g / count;
-          temp[idx + 2] = b / count;
-        }
-      }
-      ctx.putImageData(new ImageData(temp, w, h), x, y);
     }
 
     // ---------- 辅助 ----------
@@ -1039,15 +1055,16 @@
         cropRect.w = canvas.width;
         cropRect.h = canvas.height;
       }
-      drawOverlay();
+      drawOverlay(); // 切换到裁剪模式时显示裁剪框
     }
 
-    // ---------- 导出（含VIP计费） ----------
+    // ---------- 导出（高清，基于原始尺寸） ----------
     function exportImage() {
-      if (canvas.width === 0) {
+      if (uploadedImages.length === 0) {
         alert('请先上传图片！');
         return;
       }
+      // VIP 检查
       const isVIP = localStorage.getItem('xiuxiutu_vip') === 'true';
       if (!isVIP) {
         let count = parseInt(localStorage.getItem('xiuxiutu_exportCount') || '0');
@@ -1058,9 +1075,53 @@
           return;
         }
       }
+
+      // 1. 创建原始尺寸的画布
+      const originalWidth = originalMaxWidth;
+      const exportCanvas = document.createElement('canvas');
+      // 计算原始总高度
+      let totalHeight = 0;
+      uploadedImages.forEach(item => {
+        totalHeight += item.originalHeight;
+      });
+      totalHeight += (uploadedImages.length - 1) * gap;
+      exportCanvas.width = originalWidth;
+      exportCanvas.height = totalHeight;
+      const exportCtx = exportCanvas.getContext('2d');
+
+      // 2. 按原始尺寸拼接所有图片
+      let yPos = 0;
+      uploadedImages.forEach(item => {
+        exportCtx.drawImage(item.img, 0, yPos, item.originalWidth, item.originalHeight);
+        yPos += item.originalHeight + gap;
+      });
+
+      // 3. 如果有裁剪框，应用裁剪
+      let finalCanvas = exportCanvas;
+      let finalCtx = exportCtx;
+      if (cropRect.w > 0 && cropRect.h > 0 && cropRect.w < originalWidth && cropRect.h < totalHeight) {
+        // 映射裁剪坐标到原始尺寸
+        const scaleX = originalWidth / canvas.width;
+        const scaleY = (totalHeight) / canvas.height; // 注意 canvas.height 是编辑高度
+        const cropX = Math.round(cropRect.x * scaleX);
+        const cropY = Math.round(cropRect.y * scaleY);
+        const cropW = Math.round(cropRect.w * scaleX);
+        const cropH = Math.round(cropRect.h * scaleY);
+        // 裁剪
+        const imageData = exportCtx.getImageData(cropX, cropY, cropW, cropH);
+        const croppedCanvas = document.createElement('canvas');
+        croppedCanvas.width = cropW;
+        croppedCanvas.height = cropH;
+        const croppedCtx = croppedCanvas.getContext('2d');
+        croppedCtx.putImageData(imageData, 0, 0);
+        finalCanvas = croppedCanvas;
+        finalCtx = croppedCtx;
+      }
+
+      // 4. 导出
       const format = exportFormat.value;
       const quality = 0.92;
-      canvas.toBlob((blob) => {
+      finalCanvas.toBlob((blob) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -1093,7 +1154,8 @@
         undoStack = [];
         undoStack.push(canvas.toDataURL());
         resetCrop();
-        drawOverlay();
+        // 如果当前是裁剪模式，重新绘制裁剪框
+        if (currentMode === 'crop') drawOverlay();
       }
     });
 
@@ -1139,7 +1201,7 @@
       }
     });
 
-    // ----- Canvas 交互事件（保证穿透） -----
+    // ----- Canvas 交互事件 -----
     canvas.addEventListener('mousedown', startDraw);
     canvas.addEventListener('mousemove', (e) => {
       if (currentMode !== 'preview' && currentMode !== 'crop') {
@@ -1170,7 +1232,7 @@
     setMode('preview');
 
     // ================================================================
-    // 4. 一键上架（完整保留）
+    // 4. 一键上架（完整保留，与主拼图独立）
     // ================================================================
     const listingUploadZone = document.getElementById('listingUploadZone');
     const listingFileInput = document.getElementById('listingFileInput');
@@ -1302,7 +1364,7 @@
 
     updateListingExportBtn();
 
-    console.log('✅ 修修图 · 电商工作台 最终算法交割版已加载！');
+    console.log('✅ 修修图 · 电商工作台 最终完全体 (GPU加速+缩放编辑+高清导出) 已加载！');
   </script>
 </body>
 </html>
