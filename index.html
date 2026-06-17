@@ -18,6 +18,7 @@
       --color-text-secondary: #94A3B8;
       --color-text-muted: #64748B;
       --border-light: rgba(6, 182, 212, 0.15);
+      --header-height: 64px;
     }
     body.light {
       --bg-main: #F8FAFC;
@@ -37,7 +38,7 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
       line-height: 1.6;
       transition: background 0.25s, color 0.25s;
-      padding: 0 16px 40px;
+      padding: 0 16px 50px; /* 底部安全间距提升至 50px */
     }
     .container { max-width: 1200px; margin: 0 auto; padding: 20px 0; }
 
@@ -46,7 +47,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 64px;
+      height: var(--header-height);
       padding: 0 24px;
       background: var(--bg-card);
       border-bottom: 1px solid var(--border-light);
@@ -142,34 +143,38 @@
       background: rgba(6, 182, 212, 0.02);
       position: relative;
       z-index: 1;
+      margin-bottom: 16px;
     }
     .upload-zone:hover { border-color: var(--color-primary); background: rgba(6, 182, 212, 0.05); }
 
-    /* Canvas 容器 —— 确保层级独立 */
-    .canvas-wrapper {
-      margin-top: 16px;
-      border-radius: 12px;
-      overflow: auto;
-      border: 1px solid var(--border-light);
-      background: #fff;
-      max-height: 70vh;
-      position: relative;
-      z-index: 10;
+    /* ========== 吸顶控制面板（sticky） ========== */
+    .sticky-controls {
+      position: sticky;
+      top: var(--header-height);  /* 紧贴导航栏下方 */
+      z-index: 100;
+      background: var(--bg-card);
+      padding: 12px 0 8px;
+      margin: 0 -4px 16px -4px;  /* 抵消 card 的内边距，使背景撑满 */
+      border-bottom: 1px solid var(--border-light);
+      backdrop-filter: blur(4px);
+      transition: background 0.25s, border-color 0.25s;
     }
-    .canvas-wrapper canvas {
-      display: block;
-      width: 100%;
-      height: auto;
-      position: relative;
-      z-index: 10;
-      cursor: default;
+    .sticky-controls .thumb-list {
+      margin-bottom: 8px;
+    }
+    .sticky-controls .control-bar {
+      margin-top: 0;
+    }
+    .sticky-controls #cropRatioPanel {
+      margin-top: 8px;
     }
 
+    /* 缩略图列表 */
     .thumb-list {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
-      margin: 12px 0;
+      margin: 0 0 8px 0;
     }
     .thumb-item {
       position: relative;
@@ -179,6 +184,7 @@
       border: 2px solid var(--border-light);
       overflow: hidden;
       cursor: pointer;
+      flex-shrink: 0;
     }
     .thumb-item img { width: 100%; height: 100%; object-fit: cover; }
     .thumb-item .del-btn {
@@ -201,11 +207,10 @@
       flex-wrap: wrap;
       gap: 16px 24px;
       align-items: center;
-      margin-top: 16px;
-      padding: 12px 16px;
-      background: var(--bg-card);
+      padding: 8px 0;
+      background: transparent;
       border-radius: 12px;
-      border: 1px solid var(--border-light);
+      border: none;
     }
     .control-group {
       display: flex;
@@ -229,6 +234,26 @@
       transition: all 0.2s;
     }
     .crop-ratio-btn.active { border-color: var(--color-primary); color: var(--color-primary); background: rgba(6,182,212,0.08); }
+
+    /* Canvas 容器 —— 独立滚动 */
+    .canvas-wrapper {
+      margin-top: 16px;
+      border-radius: 12px;
+      overflow: auto;
+      border: 1px solid var(--border-light);
+      background: #fff;
+      max-height: 70vh;
+      position: relative;
+      z-index: 10;
+    }
+    .canvas-wrapper canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      position: relative;
+      z-index: 10;
+      cursor: default;
+    }
 
     /* VIP */
     .vip-overlay {
@@ -369,15 +394,16 @@
 
     <!-- ========== 工具面板 ========== -->
     <section id="tool">
-      <div class="card" style="padding:24px;">
+      <div class="card" style="padding:20px 16px;">
         <!-- 标签页 -->
-        <div style="display:flex; gap:12px; flex-wrap:wrap; border-bottom:1px solid var(--border-light); padding-bottom:16px; margin-bottom:20px;">
+        <div style="display:flex; gap:12px; flex-wrap:wrap; border-bottom:1px solid var(--border-light); padding-bottom:12px; margin-bottom:16px;">
           <button class="btn tool-tab active" data-tool="stitch">📱 拼图 / 打码 / 裁剪</button>
           <button class="btn tool-tab" data-tool="listing">📦 一键上架 <span style="background:#F97316; color:white; font-size:0.6rem; padding:2px 10px; border-radius:30px;">VIP</span></button>
         </div>
 
         <!-- 拼图/打码/裁剪 -->
         <div id="toolStitch">
+          <!-- 上传区（不固定，滚动走） -->
           <div class="upload-zone" id="uploadZone">
             <div style="font-size:3rem;">📁</div>
             <p style="font-weight:600; color:var(--color-text);">点击或拖拽图片到此处</p>
@@ -385,55 +411,62 @@
           </div>
           <input type="file" id="fileInput" accept="image/*" multiple style="display:none;" />
 
-          <div class="thumb-list" id="thumbList"></div>
+          <!-- ===== 吸顶控制面板 ===== -->
+          <div class="sticky-controls">
+            <!-- 缩略图列表 -->
+            <div class="thumb-list" id="thumbList"></div>
 
-          <div class="control-bar">
-            <div class="control-group">
-              <label>间距</label>
-              <input type="range" id="gapSlider" min="0" max="40" value="4" />
-              <span id="gapLabel" style="min-width:30px; font-weight:600; color:var(--color-primary);">4px</span>
+            <!-- 控制条 -->
+            <div class="control-bar">
+              <div class="control-group">
+                <label>间距</label>
+                <input type="range" id="gapSlider" min="0" max="40" value="4" />
+                <span id="gapLabel" style="min-width:30px; font-weight:600; color:var(--color-primary);">4px</span>
+              </div>
+
+              <div class="control-group">
+                <label>模式</label>
+                <button class="btn mode-btn active" data-mode="preview">📐 预览</button>
+                <button class="btn mode-btn" data-mode="mosaic">🧩 马赛克</button>
+                <button class="btn mode-btn" data-mode="blur">🌫️ 模糊</button>
+                <button class="btn mode-btn" data-mode="crop">✂️ 裁剪</button>
+              </div>
+
+              <div class="control-group" id="brushGroup" style="display:none;">
+                <label>画笔</label>
+                <input type="range" id="brushSlider" min="4" max="120" value="30" />
+                <span id="brushLabel" style="min-width:30px; font-weight:600; color:var(--color-primary);">30</span>
+              </div>
+
+              <div class="control-group" style="margin-left:auto;">
+                <label>导出</label>
+                <select id="exportFormat">
+                  <option value="image/jpeg">JPG</option>
+                  <option value="image/png">PNG</option>
+                  <option value="image/webp">WebP</option>
+                </select>
+                <button class="btn btn-primary" id="exportBtn">⬇ 导出</button>
+                <button class="btn" id="undoBtn">↩ 撤销</button>
+                <button class="btn btn-danger" id="clearBtn">🗑 清除</button>
+              </div>
             </div>
 
-            <div class="control-group">
-              <label>模式</label>
-              <button class="btn mode-btn active" data-mode="preview">📐 预览</button>
-              <button class="btn mode-btn" data-mode="mosaic">🧩 马赛克</button>
-              <button class="btn mode-btn" data-mode="blur">🌫️ 模糊</button>
-              <button class="btn mode-btn" data-mode="crop">✂️ 裁剪</button>
-            </div>
-
-            <div class="control-group" id="brushGroup" style="display:none;">
-              <label>画笔</label>
-              <input type="range" id="brushSlider" min="4" max="120" value="30" />
-              <span id="brushLabel" style="min-width:30px; font-weight:600; color:var(--color-primary);">30</span>
-            </div>
-
-            <div class="control-group" style="margin-left:auto;">
-              <label>导出</label>
-              <select id="exportFormat">
-                <option value="image/jpeg">JPG</option>
-                <option value="image/png">PNG</option>
-                <option value="image/webp">WebP</option>
-              </select>
-              <button class="btn btn-primary" id="exportBtn">⬇ 导出</button>
-              <button class="btn" id="undoBtn">↩ 撤销</button>
-              <button class="btn btn-danger" id="clearBtn">🗑 清除</button>
+            <!-- 裁剪比例（也吸顶） -->
+            <div id="cropRatioPanel" style="display:none;">
+              <div class="crop-ratio-group">
+                <span style="font-weight:600; color:var(--color-text-secondary);">比例：</span>
+                <button class="crop-ratio-btn active" data-ratio="free">自由</button>
+                <button class="crop-ratio-btn" data-ratio="1:1">1:1</button>
+                <button class="crop-ratio-btn" data-ratio="4:3">4:3</button>
+                <button class="crop-ratio-btn" data-ratio="16:9">16:9</button>
+                <button class="btn btn-primary" id="applyCropBtn">✅ 确认裁剪</button>
+                <button class="btn" id="resetCropBtn">↩ 重置</button>
+              </div>
             </div>
           </div>
+          <!-- ===== 吸顶控制面板结束 ===== -->
 
-          <div id="cropRatioPanel" style="display:none; margin-top:12px;">
-            <div class="crop-ratio-group">
-              <span style="font-weight:600; color:var(--color-text-secondary);">比例：</span>
-              <button class="crop-ratio-btn active" data-ratio="free">自由</button>
-              <button class="crop-ratio-btn" data-ratio="1:1">1:1</button>
-              <button class="crop-ratio-btn" data-ratio="4:3">4:3</button>
-              <button class="crop-ratio-btn" data-ratio="16:9">16:9</button>
-              <button class="btn btn-primary" id="applyCropBtn">✅ 确认裁剪</button>
-              <button class="btn" id="resetCropBtn">↩ 重置</button>
-            </div>
-          </div>
-
-          <!-- Canvas 容器 -->
+          <!-- Canvas 容器（独立滚动） -->
           <div class="canvas-wrapper">
             <canvas id="mainCanvas"></canvas>
           </div>
@@ -779,31 +812,6 @@
     }
 
     function drawOverlay() {
-      // 仅在裁剪模式或需要显示裁剪框时调用，但我们现在只在裁剪模式下绘制裁剪框，且不重绘整张底图
-      // 但为了显示裁剪框，我们需要在现有画布上叠加绘制，不能清除已有内容。
-      // 策略：在绘制裁剪框前，不重新绘制底图，只加一层半透明遮罩和框线。
-      // 但之前我们是在 drawOverlay 中重绘整个画布，这是性能杀手。
-      // 现在我们改为：在裁剪模式下，直接在当前画布上绘制遮罩和框线，而不重新绘制底图。
-      // 但为了撤销栈的一致性，我们最好在裁剪时也保存状态。但裁剪框只是辅助显示，不修改像素，所以可以不保存到栈。
-      // 因此，我们实现一个独立的绘制裁剪框函数，不干扰画布内容。
-      // 但为了简单且不破坏之前的逻辑，我们采用这种方式：在裁剪模式下，当用户调整裁剪框时，我们直接在画布上绘制，但不清除原有内容。
-      // 然而，由于我们不再在 mousemove 中调用 drawOverlay 重绘，我们只需要在裁剪框变化时重新绘制裁剪框即可。
-      // 这里我们使用一个独立的图层或直接在画布上绘制（但注意不要覆盖底图）。
-      // 更好的做法：每次绘制裁剪框前，先保存当前画布内容，然后绘制遮罩，但这样会丢失底图。
-      // 我们采用最稳妥的方式：在裁剪模式下，每次重新绘制裁剪框时，先恢复底图（从 undoStack 最新状态），再绘制遮罩。
-      // 但为了性能，我们仅在 mousedown/mouseup 时更新裁剪框，mousemove 时只修改 cropRect 坐标，然后重绘裁剪框（即重新画遮罩）。
-      // 方法：在裁剪模式下，mousemove 中调用 drawCropOverlay()，该函数先清除画布，然后从 undoStack 最新状态恢复底图，再绘制遮罩。
-      // 但这样仍会重绘整张底图，但只在裁剪模式下，且 mousemove 频率低，可以接受。
-      // 但为了与涂抹优化一致，我们最好避免在 mousemove 中重绘整图。但裁剪框调整是低频操作，可以接受。
-      // 我们优化一下：只在裁剪模式下，每次更新裁剪框时，用以下方式：
-      // 1. 从 undoStack 最新状态恢复底图（drawImage）
-      // 2. 绘制遮罩和框线。
-      // 这样虽然在 mousemove 中重绘整图，但裁剪模式不像涂抹那样高频，且用户不会在裁剪时疯狂移动鼠标，所以性能影响可控。
-      // 因此，我们保留 drawOverlay 的重绘机制，但仅在裁剪模式下调用，且 mousemove 中调用时，频率低。
-      // 而在涂抹模式下，我们禁止调用 drawOverlay。
-      // 所以我们修改 moveDraw：当 currentMode === 'crop' 时调用 drawOverlay，否则不调用。
-      // 在涂抹模式下，我们只做局部修改，不重绘整图。
-      // 这样既保证了裁剪框的显示，又避免了涂抹时的卡顿。
       if (undoStack.length === 0) return;
       const currentState = undoStack[undoStack.length - 1];
       if (!currentState) return;
@@ -1154,7 +1162,6 @@
         undoStack = [];
         undoStack.push(canvas.toDataURL());
         resetCrop();
-        // 如果当前是裁剪模式，重新绘制裁剪框
         if (currentMode === 'crop') drawOverlay();
       }
     });
@@ -1364,7 +1371,7 @@
 
     updateListingExportBtn();
 
-    console.log('✅ 修修图 · 电商工作台 最终完全体 (GPU加速+缩放编辑+高清导出) 已加载！');
+    console.log('✅ 修修图 · 电商工作台 最终吸顶布局+全算法已加载！');
   </script>
 </body>
 </html>
