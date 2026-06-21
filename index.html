@@ -3,725 +3,377 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>修修图·电商工作台 | 拼图 · 打码 · 裁剪 · 一键上架</title>
-  <meta name="description" content="修修图电商工作台，多图拼接、隐私打码、裁剪、一键上架全平台。纯本地处理。">
+  <title>修修图·电商工作台 | 专业的沉浸式一站式图像处理</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
-    /* ========== 双主题变量 ========== */
+    /* ========== 双主题变量（全权接管·色彩重构） ========== */
     :root {
-      --bg-main: #0F172A;
-      --bg-card: #1E293B;
-      --color-primary: #06B6D4;
-      --color-primary-hover: #0891B2;
-      --color-text: #F8FAFC;
-      --color-text-secondary: #94A3B8;
-      --color-text-muted: #64748B;
-      --border-light: rgba(6, 182, 212, 0.15);
-      --header-height: 60px;
-    }
-    body.light {
-      --bg-main: #F8FAFC;
+      --bg-main: #F1F5F9;
       --bg-card: #FFFFFF;
+      --bg-workspace: #E2E8F0;
       --color-primary: #0284C7;
-      --color-primary-hover: #0369A1;
+      --color-primary-glow: rgba(2, 132, 199, 0.08);
       --color-text: #0F172A;
       --color-text-secondary: #475569;
-      --color-text-muted: #64748B;
-      --border-light: rgba(0,0,0,0.08);
+      --border-light: #E2E8F0;
+      --header-height: 56px;
+      --sidebar-width: 320px;
+    }
+    body.dark {
+      --bg-main: #0F172A;
+      --bg-card: #1E293B;
+      --bg-workspace: #0B0F19;
+      --color-primary: #06B6D4;
+      --color-primary-glow: rgba(6, 182, 212, 0.12);
+      --color-text: #F8FAFC;
+      --color-text-secondary: #94A3B8;
+      --border-light: #334155;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body {
-      height: 100%;
+    body {
       background: var(--bg-main);
       color: var(--color-text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-      line-height: 1.6;
-      transition: background 0.25s, color 0.25s;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow: hidden; /* 彻底封锁全局滚动条，打造全屏客户端质感 */
+      height: 100vh;
     }
-    body { padding: 0 16px 20px; overflow-y: auto; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 12px 0 0; }
 
-    /* ---------- Header ---------- */
+    /* ---------- Navbar ---------- */
     .navbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       height: var(--header-height);
-      padding: 0 20px;
+      padding: 0 24px;
       background: var(--bg-card);
       border-bottom: 1px solid var(--border-light);
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      margin-bottom: 8px;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
     }
     .brand { display: flex; align-items: center; gap: 10px; }
-    .brand svg { width: 32px; height: 32px; }
-    .brand-text { font-size: 1.2rem; letter-spacing: -0.2px; }
-    .brand-text strong { font-weight: 700; color: var(--color-text); }
+    .brand svg { width: 28px; height: 28px; }
+    .brand-text { font-size: 1.15rem; font-weight: 700; }
     .brand-text span { font-weight: 400; color: var(--color-text-secondary); }
 
-    .nav-links { display: flex; align-items: center; gap: 20px; }
-    .nav-links a { text-decoration: none; font-size: 0.85rem; font-weight: 600; color: var(--color-text-secondary); transition: color 0.2s; }
-    .nav-links a:hover { color: var(--color-primary); }
-
-    .theme-toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      border-radius: 30px;
-      border: 1px solid var(--border-light);
-      background: transparent;
-      cursor: pointer;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--color-text-secondary);
-      transition: all 0.2s;
+    /* ---------- 工业级双栏网格架构 ---------- */
+    .app-workspace {
+      display: flex;
+      height: calc(100vh - var(--header-height));
+      margin-top: var(--header-height);
     }
-    .theme-toggle:hover { border-color: var(--color-primary); color: var(--color-primary); }
 
-    /* ---------- Banner （极度精简） ---------- */
-    .banner {
-      text-align: center;
-      padding: 6px 0 8px;
-    }
-    .banner h1 {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--color-text);
-      letter-spacing: -0.3px;
-    }
-    .banner h1 span { color: var(--color-primary); }
-    .banner p { color: var(--color-text-secondary); font-size: 0.9rem; margin-top: 2px; }
-
-    /* ---------- 卡片 ---------- */
-    .card {
+    /* 左侧控制台 */
+    .sidebar-controls {
+      width: var(--sidebar-width);
       background: var(--bg-card);
-      border: 1px solid var(--border-light);
-      border-radius: 12px;
-      padding: 12px 12px 16px;
-      transition: box-shadow 0.2s, border-color 0.2s;
+      border-right: 1px solid var(--border-light);
       display: flex;
       flex-direction: column;
-    }
-
-    /* ---------- 紧凑控制条（整合上传、缩略图、工具、缩放） ---------- */
-    .control-bar-compact {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px 16px;
-      padding: 6px 0;
-      background: transparent;
-      border-bottom: 1px solid var(--border-light);
-      margin-bottom: 12px;
-    }
-    .control-bar-compact .upload-mini {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      border: 1px dashed var(--border-light);
-      border-radius: 30px;
-      cursor: pointer;
-      transition: all 0.2s;
-      background: rgba(6,182,212,0.04);
-      font-size: 0.8rem;
-      color: var(--color-text-secondary);
-      flex-shrink: 0;
-    }
-    .control-bar-compact .upload-mini:hover {
-      border-color: var(--color-primary);
-      background: rgba(6,182,212,0.08);
-      color: var(--color-text);
-    }
-    .control-bar-compact .upload-mini .icon { font-size: 1.2rem; line-height: 1; }
-
-    .control-bar-compact .thumb-list-compact {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      flex: 1;
-      min-width: 120px;
-      max-height: 52px;
+      gap: 20px;
+      padding: 24px 18px;
       overflow-y: auto;
-      padding: 2px 0;
-    }
-    .thumb-list-compact .thumb-item {
-      position: relative;
-      width: 48px;
-      height: 48px;
-      border-radius: 6px;
-      border: 2px solid var(--border-light);
-      overflow: hidden;
-      cursor: pointer;
       flex-shrink: 0;
-    }
-    .thumb-list-compact .thumb-item img { width: 100%; height: 100%; object-fit: cover; }
-    .thumb-list-compact .thumb-item .del-btn {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      width: 16px; height: 16px;
-      border-radius: 50%;
-      background: #EF4444;
-      color: white;
-      border: none;
-      font-size: 10px;
-      line-height: 16px;
-      text-align: center;
-      cursor: pointer;
+      z-index: 200;
     }
 
-    .control-bar-compact .control-group {
+    /* 右侧暗房画布区 */
+    .canvas-darkroom {
+      flex-grow: 1;
+      background: var(--bg-workspace);
       display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-    .control-bar-compact .control-group label {
-      font-weight: 600;
-      color: var(--color-text-secondary);
-      font-size: 0.75rem;
-    }
-    .control-bar-compact .control-group input[type="range"] {
-      width: 80px;
-      accent-color: var(--color-primary);
-      height: 4px;
-    }
-    .control-bar-compact .control-group select {
-      background: var(--bg-main);
-      color: var(--color-text);
-      border: 1px solid var(--border-light);
-      border-radius: 6px;
-      padding: 2px 8px;
-      font-size: 0.75rem;
-    }
-    .control-bar-compact .btn-sm {
-      padding: 4px 12px;
-      border-radius: 30px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      border: 1px solid var(--border-light);
-      background: transparent;
-      color: var(--color-text-secondary);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .control-bar-compact .btn-sm:hover { border-color: var(--color-primary); color: var(--color-primary); }
-    .control-bar-compact .btn-primary-sm {
-      background: var(--color-primary);
-      border-color: var(--color-primary);
-      color: #0F172A;
-    }
-    .control-bar-compact .btn-primary-sm:hover { background: var(--color-primary-hover); border-color: var(--color-primary-hover); }
-    .control-bar-compact .btn-danger-sm { border-color: #EF4444; color: #EF4444; }
-    .control-bar-compact .btn-danger-sm:hover { background: #EF4444; color: white; }
-
-    /* 模式按钮组 */
-    .mode-group {
-      display: flex;
-      gap: 4px;
-    }
-    .mode-group .mode-btn {
-      padding: 2px 10px;
-      border-radius: 30px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      border: 1px solid var(--border-light);
-      background: transparent;
-      color: var(--color-text-secondary);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .mode-group .mode-btn.active {
-      background: var(--color-primary);
-      border-color: var(--color-primary);
-      color: #0F172A;
-    }
-    .mode-group .mode-btn:hover:not(.active) { border-color: var(--color-primary); color: var(--color-primary); }
-
-    /* 裁剪比例 */
-    .crop-ratio-group-compact {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-    }
-    .crop-ratio-group-compact .crop-ratio-btn {
-      padding: 2px 10px;
-      border-radius: 30px;
-      font-size: 0.7rem;
-      border: 1px solid var(--border-light);
-      background: transparent;
-      color: var(--color-text-secondary);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .crop-ratio-group-compact .crop-ratio-btn.active {
-      border-color: var(--color-primary);
-      color: var(--color-primary);
-      background: rgba(6,182,212,0.08);
-    }
-
-    /* ---------- Canvas 容器 ---------- */
-    .canvas-wrapper {
-      margin-top: 8px;
-      border-radius: 10px;
-      overflow: auto;
-      border: 1px solid var(--border-light);
-      background: #fff;
-      flex: 1;
-      min-height: 300px;
-      position: relative;
-      transition: all 0.1s;
-    }
-    .canvas-wrapper .canvas-container {
-      transform-origin: top left;
-      display: inline-block;
-      width: 100%;
-      height: auto;
-    }
-    .canvas-wrapper canvas {
-      display: block;
-      width: 100%;
-      height: auto;
-      background: #fff;
-      cursor: default;
-    }
-
-    /* ---------- VIP ---------- */
-    .vip-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(4px);
-      z-index: 999;
-      display: none;
       align-items: center;
       justify-content: center;
-    }
-    .vip-overlay.show { display: flex; }
-    .vip-modal {
-      background: var(--bg-card);
-      border-radius: 24px;
-      padding: 32px 28px;
-      max-width: 400px;
-      width: 90%;
-      text-align: center;
-      border: 1px solid var(--border-light);
-    }
-    .vip-modal h2 { font-size: 1.6rem; margin-bottom: 10px; color: var(--color-text); }
-    .vip-modal p { color: var(--color-text-secondary); margin-bottom: 20px; }
-    .vip-modal .btn { width: 100%; justify-content: center; }
-
-    /* ---------- 底部功能卡片（更精简） ---------- */
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px;
-      margin: 16px 0 8px;
-    }
-    .features-grid .card-feature {
-      background: var(--bg-card);
-      border: 1px solid var(--border-light);
-      border-radius: 10px;
-      padding: 12px 8px;
-      text-align: center;
-    }
-    .features-grid .card-feature .icon { font-size: 2rem; }
-    .features-grid .card-feature h4 { font-weight: 700; margin: 4px 0 2px; color: var(--color-text); font-size: 0.9rem; }
-    .features-grid .card-feature p { font-size: 0.75rem; color: var(--color-text-secondary); }
-
-    .footer {
-      text-align: center;
-      padding: 12px 0 4px;
-      border-top: 1px solid var(--border-light);
-      color: var(--color-text-muted);
-      font-size: 0.75rem;
-      margin-top: 16px;
-    }
-    .hidden { display: none !important; }
-    .flex { display: flex; }
-    .flex-wrap { flex-wrap: wrap; }
-    .gap-2 { gap: 8px; }
-    .gap-4 { gap: 16px; }
-    .items-center { align-items: center; }
-    .justify-between { justify-content: space-between; }
-    .w-full { width: 100%; }
-    .text-center { text-align: center; }
-    .text-muted { color: var(--color-text-muted); }
-    .text-secondary { color: var(--color-text-secondary); }
-
-    #brushCursor {
-      position: fixed;
-      pointer-events: none;
-      border: 2px solid var(--color-primary);
-      border-radius: 50%;
-      background: rgba(6, 182, 212, 0.1);
-      z-index: 1000;
-      display: none;
-      transform: translate(-50%, -50%);
-      transition: width 0.1s, height 0.1s;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
     }
 
-    /* 右键悬浮菜单 */
-    #floatingMenu {
-      position: fixed;
-      display: none;
-      background: rgba(20, 30, 50, 0.7);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 40px;
-      padding: 6px 14px;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-      z-index: 2000;
-      gap: 6px;
-      align-items: center;
-      pointer-events: auto;
+    /* 模块化通用卡片 */
+    .control-block {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
-    #floatingMenu .menu-btn {
-      background: transparent;
-      border: none;
-      color: var(--color-text);
-      font-size: 1rem;
-      padding: 4px 8px;
-      border-radius: 30px;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-weight: 600;
+    .block-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-secondary); }
+
+    /* 上传组件 */
+    .upload-zone {
+      border: 2px dashed var(--border-light); border-radius: 12px;
+      padding: 16px; text-align: center; cursor: pointer;
+      background: var(--color-primary-glow); transition: all 0.2s;
     }
-    #floatingMenu .menu-btn:hover {
-      background: rgba(6, 182, 212, 0.2);
-      color: var(--color-primary);
+    .upload-zone:hover { border-color: var(--color-primary); }
+
+    .thumb-list { display: flex; flex-wrap: wrap; gap: 8px; max-height: 130px; overflow-y: auto; padding: 4px 0; }
+    .thumb-item {
+      position: relative; width: 64px; height: 64px; border-radius: 6px;
+      border: 1px solid var(--border-light); overflow: hidden; flex-shrink: 0;
     }
-    #floatingMenu .menu-btn.active-mode {
-      background: var(--color-primary);
-      color: #0F172A;
+    .thumb-item img { width: 100%; height: 100%; object-fit: cover; }
+    .thumb-item .del-btn {
+      position: absolute; top: 2px; right: 2px; width: 16px; height: 16px;
+      border-radius: 50%; background: #EF4444; color: white; border: none;
+      font-size: 10px; line-height: 14px; text-align: center; cursor: pointer; z-index: 5;
     }
-    #floatingMenu .menu-divider {
-      width: 1px;
-      height: 20px;
-      background: rgba(255,255,255,0.2);
+
+    /* 垂直表单组件 */
+    .btn-vertical-stack { display: flex; flex-direction: column; gap: 8px; }
+    .btn {
+      width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px 16px; border-radius: 30px; font-weight: 600; font-size: 0.9rem;
+      border: 1px solid var(--border-light); background: transparent; color: var(--color-text-secondary);
+      cursor: pointer; transition: all 0.15s;
     }
+    .btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .btn.active { background: var(--color-primary); color: #0F172A !important; border-color: var(--color-primary); font-weight: 700; }
+    .btn-primary { background: var(--color-primary); border-color: var(--color-primary); color: #0F172A; }
+    .btn-danger { border-color: #EF4444; color: #EF4444; }
+    .btn-danger:hover { background: #EF4444; color: white; }
+
+    .slider-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; }
+    .slider-row input[type="range"] { flex-grow: 1; margin: 0 10px; accent-color: var(--color-primary); }
+
+    /* 核心智能画布（自适应包裹算法容器） */
+    .canvas-container-mask {
+      max-width: 100%; max-height: 100%;
+      box-shadow: 0 25px 70px rgba(0,0,0,0.3);
+      position: relative; display: flex; align-items: center; justify-content: center;
+    }
+    #mainCanvas {
+      max-width: 100%; max-height: calc(100vh - 120px); /* 强行在单屏内完美自适应缩放全显 */
+      display: none; background: #ffffff; object-fit: contain;
+    }
+    .darkroom-placeholder { text-align: center; color: var(--color-text-secondary); }
+
+    /* 浮动与画笔光标 */
+    #brushCursor { position: fixed; pointer-events: none; border: 2px solid var(--color-primary); border-radius: 50%; background: rgba(6, 182, 212, 0.12); z-index: 5000; display: none; transform: translate(-50%, -50%); }
+    #floatingMenu { position: fixed; display: none; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 60px; padding: 6px 14px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); z-index: 6000; gap: 8px; align-items: center; }
+    #floatingMenu .menu-btn { background: transparent; border: none; color: #94A3B8; font-size: 0.9rem; padding: 6px 12px; border-radius: 40px; cursor: pointer; font-weight: 600; }
+    #floatingMenu .menu-btn.active-mode { background: var(--color-primary); color: #0F172A !important; }
+
+    /* VIP */
+    .vip-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(6px); z-index: 9999; display: none; align-items: center; justify-content: center; }
+    .vip-modal { background: var(--bg-card); border-radius: 24px; padding: 40px 32px; max-width: 400px; width: 90%; text-align: center; border: 1px solid var(--border-light); box-shadow: 0 30px 60px rgba(0,0,0,0.4); }
+
+    /* 裁剪比例按钮 */
+    .crop-ratio-btn { padding: 6px; border: 1px solid var(--border-light); border-radius: 8px; text-align: center; font-size: 0.75rem; cursor: pointer; transition: all 0.15s; }
+    .crop-ratio-btn.active { background: var(--color-primary); color: #0F172A; font-weight: 700; }
   </style>
 </head>
-<body>
+<body class="dark">
 
-  <!-- VIP 弹窗 -->
   <div class="vip-overlay" id="vipOverlay">
     <div class="vip-modal">
-      <h2>🔒 试用已结束</h2>
-      <p>您已完成 5 次导出。升级 VIP 可继续无限使用。</p>
-      <button class="btn btn-primary" onclick="activateVIP()">升级 VIP（免费体验）</button>
-      <p style="margin-top:16px; font-size:0.8rem; color:var(--color-text-muted);">点击即解锁，仅保存在本设备</p>
+      <h2 class="text-2xl font-bold mb-2">🔒 试用已结束</h2>
+      <p class="text-sm mb-6 var(--color-text-secondary)">您已完成 5 次商用导出。解锁 VIP 即可畅享无限高清生成。</p>
+      <button class="btn btn-primary w-full" onclick="activateVIP()">一键开通 VIP（免费体验）</button>
     </div>
   </div>
 
-  <!-- 右键悬浮菜单 -->
   <div id="floatingMenu">
-    <button class="menu-btn" data-mode="preview">📐</button>
-    <button class="menu-btn" data-mode="mosaic">🧩</button>
-    <button class="menu-btn" data-mode="blur">🌫️</button>
-    <div class="menu-divider"></div>
+    <button class="menu-btn" data-mode="preview">📐 预览</button>
+    <button class="menu-btn" data-mode="mosaic">🧩 马赛克</button>
+    <button class="menu-btn" data-mode="blur">🌫️ 模糊</button>
+    <div style="width:1px; height:16px; background:rgba(255,255,255,0.2)"></div>
     <button class="menu-btn" id="menuUndo">↩️</button>
     <button class="menu-btn" id="menuClear">🗑️</button>
   </div>
 
-  <!-- ========== 顶部导航 ========== -->
   <header class="navbar">
     <div class="brand">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="32" height="32">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
         <defs>
-          <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#0284C7" />
-            <stop offset="50%" stop-color="#06B6D4" />
-            <stop offset="100%" stop-color="#3B82F6" />
-          </linearGradient>
-          <linearGradient id="lensGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#E0F2FE" stop-opacity="0.9"/>
-            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.5"/>
-          </linearGradient>
-          <radialGradient id="pixelXGlow" cx="50%" cy="50%" r="40%">
-            <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.4" />
-            <stop offset="100%" stop-color="#06B6D4" stop-opacity="0" />
-          </radialGradient>
+          <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0284C7" /><stop offset="50%" stop-color="#06B6D4" /><stop offset="100%" stop-color="#3B82F6" /></linearGradient>
+          <linearGradient id="lensGrad" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#E0F2FE" stop-opacity="0.9"/><stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.5"/></linearGradient>
         </defs>
         <path d="M20,40 C20,22 30,16 50,16 C70,16 80,22 80,40 L80,70 C80,82 70,86 50,86 C30,86 20,82 20,70 Z" fill="none" stroke="url(#frameGrad)" stroke-width="5" stroke-linecap="round" />
         <path d="M40,72 C44,76 56,76 60,72" fill="none" stroke="url(#frameGrad)" stroke-width="4.5" stroke-linecap="round" />
-        <circle cx="32" cy="46" r="18" fill="url(#lensGrad)" stroke="url(#frameGrad)" stroke-width="4.5" />
-        <circle cx="68" cy="46" r="18" fill="url(#lensGrad)" stroke="url(#frameGrad)" stroke-width="4.5" />
+        <circle cx="32" cy="46" r="18" fill="url(#lensGrad)" stroke="url(#frameGrad)" stroke-width="4.5" /><circle cx="68" cy="46" r="18" fill="url(#lensGrad)" stroke="url(#frameGrad)" stroke-width="4.5" />
         <path d="M45,46 L55,46" stroke="url(#frameGrad)" stroke-width="4.5" stroke-linecap="round" />
         <path d="M27,41 L37,51 M37,41 L27,51" stroke="#0284C7" stroke-width="3.5" stroke-linecap="round" />
-        <circle cx="68" cy="46" r="8" fill="url(#pixelXGlow)" />
-        <path d="M63,41 L73,51 M73,41 L63,51" stroke="#06B6D4" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="1 1" />
+        <path d="M63,41 L73,51 M73,41 L63,51" stroke="#06B6D4" stroke-width="3.5" stroke-linecap="round" />
       </svg>
-      <span class="brand-text"><strong>修修图</strong><span> · 电商工作台</span></span>
+      <span class="brand-text">修修图 <span>· 电商工作台</span></span>
     </div>
-    <div class="nav-links">
-      <a href="#home">首页</a>
-      <a href="#tool">工具</a>
-      <a href="#features">功能</a>
-      <a href="#about">关于</a>
-    </div>
-    <div style="display:flex; align-items:center; gap:10px;">
-      <span style="font-size:0.65rem; background:var(--color-primary); color:#0F172A; padding:2px 10px; border-radius:30px; font-weight:700;">VIP</span>
-      <button class="theme-toggle" id="themeToggle">🌙</button>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <span style="font-size:0.75rem; background:var(--color-primary); color:#0F172A; padding:2px 12px; border-radius:30px; font-weight:700;">PRO</span>
+      <button class="theme-toggle" id="themeToggle">🌙 深色模式</button>
     </div>
   </header>
 
-  <!-- ========== 主容器 ========== -->
-  <div class="container">
+  <div class="app-workspace">
+    
+    <aside class="sidebar-controls">
+      <div style="display:flex; gap:8px; border-bottom:1px solid var(--border-light); padding-bottom:12px;">
+        <button class="btn tool-tab active" data-tool="stitch" style="padding:6px 12px;">📱 拼图打码</button>
+        <button class="btn tool-tab" data-tool="listing" style="padding:6px 12px;">📦 一键上架</button>
+      </div>
 
-    <!-- Banner 极度精简 -->
-    <section id="home" class="banner">
-      <h1>电商图片 <span>一站式处理</span></h1>
-      <p>多图拼接 · 隐私打码 · 智能裁剪 · 一键上架</p>
-    </section>
-
-    <!-- ========== 工具面板 ========== -->
-    <section id="tool">
-      <div class="card">
-        <!-- 标签页 -->
-        <div style="display:flex; gap:8px; flex-wrap:wrap; border-bottom:1px solid var(--border-light); padding-bottom:8px; margin-bottom:8px;">
-          <button class="btn-sm tool-tab active" data-tool="stitch">📱 拼图</button>
-          <button class="btn-sm tool-tab" data-tool="listing">📦 上架 <span style="background:#F97316; color:white; font-size:0.55rem; padding:2px 8px; border-radius:30px;">VIP</span></button>
+      <div id="sideStitch" class="flex flex-col gap-5">
+        <div class="control-block">
+          <span class="block-title">数据链入</span>
+          <div class="upload-zone" id="uploadZone">
+            <div class="text-2xl mb-1">📁</div>
+            <p class="text-xs font-semibold">本地沙盒多图导入</p>
+          </div>
+          <input type="file" id="fileInput" accept="image/*" multiple style="display:none;" />
+          <div class="thumb-list" id="thumbList"></div>
         </div>
 
-        <!-- 拼图/打码/裁剪 -->
-        <div id="toolStitch" style="display:flex; flex-direction:column; flex:1;">
+        <div class="control-block">
+          <span class="block-title">物理参数</span>
+          <div class="slider-row">
+            <label>拼接间距</label>
+            <input type="range" id="gapSlider" min="0" max="40" value="4" />
+            <span id="gapLabel" style="color:var(--color-primary); font-weight:700;">4px</span>
+          </div>
+        </div>
 
-          <!-- ===== 紧凑控制条 ===== -->
-          <div class="control-bar-compact">
-            <!-- 上传迷你按钮 -->
-            <div class="upload-mini" id="uploadMini">
-              <span class="icon">📁</span>
-              <span>上传</span>
-            </div>
-            <input type="file" id="fileInput" accept="image/*" multiple style="display:none;" />
+        <div class="control-block">
+          <span class="block-title">高频画笔工具</span>
+          <div class="btn-vertical-stack">
+            <button class="btn mode-btn active" data-mode="preview">📐 全局无损预览</button>
+            <button class="btn mode-btn" data-mode="mosaic">🧩 局部脏区马赛克</button>
+            <button class="btn mode-btn" data-mode="blur">🌫️ GPU 加速模糊</button>
+            <button class="btn mode-btn" data-mode="crop">✂️ 智能网格裁剪</button>
+          </div>
+        </div>
 
-            <!-- 缩略图列表（紧凑） -->
-            <div class="thumb-list-compact" id="thumbList"></div>
+        <div class="control-block" id="brushGroup" style="display:none;">
+          <div class="slider-row">
+            <label>画笔大小</label>
+            <input type="range" id="brushSlider" min="10" max="150" value="40" />
+            <span id="brushLabel" style="color:var(--color-primary); font-weight:700;">40</span>
+          </div>
+        </div>
 
-            <!-- 模式切换 -->
-            <div class="mode-group">
-              <button class="mode-btn active" data-mode="preview">📐</button>
-              <button class="mode-btn" data-mode="mosaic">🧩</button>
-              <button class="mode-btn" data-mode="blur">🌫️</button>
-              <button class="mode-btn" data-mode="crop">✂️</button>
-            </div>
+        <div class="control-block" id="cropRatioPanel" style="display:none;">
+          <span class="block-title">固定裁剪比例</span>
+          <div class="grid grid-cols-2 gap-2">
+            <button class="crop-ratio-btn active" data-ratio="free">自由</button>
+            <button class="crop-ratio-btn" data-ratio="1:1">方形 1:1</button>
+            <button class="crop-ratio-btn" data-ratio="4:3">标准 4:3</button>
+            <button class="crop-ratio-btn" data-ratio="16:9">宽屏 16:9</button>
+          </div>
+          <div class="flex gap-2 mt-2">
+            <button class="btn btn-primary flex-grow text-xs" id="applyCropBtn">✅ 确认切下</button>
+            <button class="btn flex-grow text-xs" id="resetCropBtn">↩ 重置</button>
+          </div>
+        </div>
 
-            <!-- 间距滑块 -->
-            <div class="control-group">
-              <label>间距</label>
-              <input type="range" id="gapSlider" min="0" max="40" value="4" />
-              <span id="gapLabel" style="min-width:20px; font-weight:600; color:var(--color-primary); font-size:0.75rem;">4</span>
-            </div>
-
-            <!-- 画笔大小（仅在打码模式显示） -->
-            <div class="control-group" id="brushGroup" style="display:none;">
-              <label>画笔</label>
-              <input type="range" id="brushSlider" min="4" max="120" value="30" />
-              <span id="brushLabel" style="min-width:20px; font-weight:600; color:var(--color-primary); font-size:0.75rem;">30</span>
-            </div>
-
-            <!-- 缩放滑块 -->
-            <div class="control-group">
-              <label>缩放</label>
-              <input type="range" id="zoomSlider" min="50" max="200" value="100" />
-              <span id="zoomLabel" style="min-width:32px; font-weight:600; color:var(--color-primary); font-size:0.75rem;">100%</span>
-            </div>
-
-            <!-- 导出/撤销/清除 -->
-            <div style="display:flex; gap:4px; align-items:center;">
-              <select id="exportFormat" style="background:var(--bg-main); color:var(--color-text); border:1px solid var(--border-light); border-radius:6px; padding:2px 6px; font-size:0.7rem;">
-                <option value="image/jpeg">JPG</option>
-                <option value="image/png">PNG</option>
-                <option value="image/webp">WebP</option>
+        <div class="control-block" style="border-top:1px solid var(--border-light); padding-top:16px;">
+          <span class="block-title">终极交割</span>
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+              <select id="exportFormat" class="flex-grow p-2 text-xs rounded-lg border" style="background:var(--bg-main); color:var(--text); border-color:var(--border-light);">
+                <option value="image/jpeg">JPG 完美品质</option>
+                <option value="image/png">PNG 透明无损</option>
+                <option value="image/webp">WebP 高清抗压缩</option>
               </select>
-              <button class="btn-sm btn-primary-sm" id="exportBtn">导出</button>
-              <button class="btn-sm" id="undoBtn">↩</button>
-              <button class="btn-sm btn-danger-sm" id="clearBtn">🗑</button>
+            </div>
+            <button class="btn btn-primary" id="exportBtn">⬇ 高清原图无损导出</button>
+            <div class="grid grid-cols-2 gap-2">
+              <button class="btn text-xs" id="undoBtn">↩ 撤销历史</button>
+              <button class="btn btn-danger text-xs" id="clearBtn">🗑 清除沙盒</button>
             </div>
           </div>
-
-          <!-- 裁剪比例（吸顶下方显示） -->
-          <div id="cropRatioPanel" style="display:none; margin-top:4px; margin-bottom:8px;">
-            <div class="crop-ratio-group-compact">
-              <span style="font-size:0.7rem; font-weight:600; color:var(--color-text-secondary);">比例：</span>
-              <button class="crop-ratio-btn active" data-ratio="free">自由</button>
-              <button class="crop-ratio-btn" data-ratio="1:1">1:1</button>
-              <button class="crop-ratio-btn" data-ratio="4:3">4:3</button>
-              <button class="crop-ratio-btn" data-ratio="16:9">16:9</button>
-              <button class="btn-sm btn-primary-sm" id="applyCropBtn">确认</button>
-              <button class="btn-sm" id="resetCropBtn">重置</button>
-            </div>
-          </div>
-
-          <!-- Canvas 容器（支持缩放） -->
-          <div class="canvas-wrapper" id="canvasWrapper">
-            <div class="canvas-container" id="canvasContainer">
-              <canvas id="mainCanvas"></canvas>
-            </div>
-          </div>
-          <div id="brushCursor"></div>
         </div>
+      </div>
 
-        <!-- 一键上架 -->
-        <div id="toolListing" style="display:none;">
-          <h2 style="font-size:1.2rem; font-weight:700; color:var(--color-text);">📦 一键上架</h2>
-          <p class="text-secondary" style="font-size:0.9rem;">上传商品主图，自动生成全平台适配尺寸包。</p>
-          <div class="upload-zone" id="listingUploadZone" style="margin:12px 0; padding:20px;">
-            <div style="font-size:2.5rem;">📦</div>
-            <p style="font-weight:600; color:var(--color-text);">点击或拖拽上传商品原图</p>
-            <p class="text-muted" style="font-size:0.8rem;">建议 800x800 以上</p>
+      <div id="sideListing" class="flex flex-col gap-5" style="display:none;">
+        <div class="control-block">
+          <span class="block-title">原图链入</span>
+          <div class="upload-zone" id="listingUploadZone">
+            <div class="text-2xl mb-1">📦</div>
+            <p class="text-xs font-semibold">拖入单个商品原画</p>
           </div>
           <input type="file" id="listingFileInput" accept="image/*" style="display:none;" />
-
-          <div id="listingPreviewArea" style="display:none; margin:12px 0;">
-            <img id="listingPreviewImg" style="max-width:150px; max-height:150px; border-radius:10px; border:1px solid var(--border-light);" />
-            <button class="btn-sm" onclick="resetListing()">重新选择</button>
+          <div id="listingPreviewArea" style="display:none;" class="mt-2 text-center">
+            <img id="listingPreviewImg" class="mx-auto rounded-lg max-h-32 border" />
+            <button class="btn text-xs mt-2" onclick="resetListing()">换一张原图</button>
           </div>
-
-          <div style="margin:12px 0;">
-            <p style="font-weight:600; color:var(--color-text); font-size:0.9rem;">选择目标平台（可多选）</p>
-            <div id="platformSelector" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
-              <label style="display:flex; align-items:center; gap:4px; padding:4px 12px; border-radius:30px; border:2px solid var(--border-light); cursor:pointer; background:var(--bg-card); font-size:0.8rem;">
-                <input type="checkbox" checked value="taobao" /> 淘宝
-              </label>
-              <label style="display:flex; align-items:center; gap:4px; padding:4px 12px; border-radius:30px; border:2px solid var(--border-light); cursor:pointer; background:var(--bg-card); font-size:0.8rem;">
-                <input type="checkbox" value="pdd" /> 拼多多
-              </label>
-              <label style="display:flex; align-items:center; gap:4px; padding:4px 12px; border-radius:30px; border:2px solid var(--border-light); cursor:pointer; background:var(--bg-card); font-size:0.8rem;">
-                <input type="checkbox" value="douyin" /> 抖音
-              </label>
-              <label style="display:flex; align-items:center; gap:4px; padding:4px 12px; border-radius:30px; border:2px solid var(--border-light); cursor:pointer; background:var(--bg-card); font-size:0.8rem;">
-                <input type="checkbox" value="xiaohongshu" /> 小红书
-              </label>
-              <label style="display:flex; align-items:center; gap:4px; padding:4px 12px; border-radius:30px; border:2px solid var(--border-light); cursor:pointer; background:var(--bg-card); font-size:0.8rem;">
-                <input type="checkbox" value="jingdong" /> 京东
-              </label>
-              <label style="display:flex; align-items:center; gap:4px; padding:4px 12px; border-radius:30px; border:2px solid var(--border-light); cursor:pointer; background:var(--bg-card); font-size:0.8rem;">
-                <input type="checkbox" value="amazon" /> 亚马逊
-              </label>
-            </div>
-          </div>
-
-          <div style="margin:12px 0; display:flex; gap:16px; align-items:center; font-size:0.8rem;">
-            <label style="display:flex; align-items:center; gap:4px; color:var(--color-text-secondary);">
-              <input type="radio" name="listingMode" value="whiteBg" checked /> 白底适配
-            </label>
-            <label style="display:flex; align-items:center; gap:4px; color:var(--color-text-secondary);">
-              <input type="radio" name="listingMode" value="direct" /> 直接缩放
-            </label>
-          </div>
-
-          <button class="btn btn-primary" id="listingExportBtn" disabled style="width:100%; justify-content:center; font-size:1rem; padding:10px;">
-            📦 一键生成全平台图片包
-          </button>
-          <p class="text-muted" style="font-size:0.75rem; margin-top:6px; text-align:center;">自动生成所选平台的所有尺寸，打包下载 ZIP</p>
         </div>
-      </div>
-    </section>
 
-    <!-- ========== 功能卡片（精简） ========== -->
-    <section id="features" style="padding: 8px 0;">
-      <div class="features-grid">
-        <div class="card-feature"><div class="icon">📱</div><h4>拼接</h4><p>多图自动拼长图</p></div>
-        <div class="card-feature"><div class="icon">🔲</div><h4>打码</h4><p>马赛克/模糊/纯色</p></div>
-        <div class="card-feature"><div class="icon">✂️</div><h4>裁剪</h4><p>自由/比例裁剪</p></div>
-        <div class="card-feature"><div class="icon">📦</div><h4>上架</h4><p>生成全平台适配包</p></div>
-      </div>
-    </section>
-
-    <!-- ========== 关于我们（精简） ========== -->
-    <section id="about" style="padding: 4px 0 8px;">
-      <div style="max-width:500px; margin:0 auto; text-align:center;">
-        <p style="color:var(--color-text-secondary); font-size:0.8rem;">
-          专注隐私安全的图片工具，所有处理均在本地完成，不上传服务器。
-        </p>
-        <div style="display:flex; justify-content:center; gap:16px; margin-top:4px; color:var(--color-primary); font-weight:600; font-size:0.75rem;">
-          <span>📧 hello@xiuxiutu.net</span>
-          <span>🛡️ 隐私优先</span>
+        <div class="control-block">
+          <span class="block-title">多图适配包策略</span>
+          <div class="flex flex-col gap-2 text-xs" id="platformSelector">
+            <label class="flex items-center gap-2"><input type="checkbox" checked value="taobao" /> 淘宝主流全家桶</label>
+            <label class="flex items-center gap-2"><input type="checkbox" value="pdd" /> 拼多多爆款矩阵</label>
+            <label class="flex items-center gap-2"><input type="checkbox" value="douyin" /> 抖音视觉规格</label>
+            <label class="flex items-center gap-2"><input type="checkbox" value="xiaohongshu" /> 小红书爆款竖图</label>
+            <label class="flex items-center gap-2"><input type="checkbox" value="jingdong" /> 京东多焦段图</label>
+            <label class="flex items-center gap-2"><input type="checkbox" value="amazon" /> 亚马逊高画质主辅</label>
+          </div>
         </div>
-      </div>
-    </section>
 
-    <footer class="footer">
-      <p>&copy; 2025 修修图 · 零上传，本地处理</p>
-    </footer>
+        <div class="control-block">
+          <span class="block-title">背景填充算法</span>
+          <div class="flex gap-4 text-xs">
+            <label class="flex items-center gap-1"><input type="radio" name="listingMode" value="whiteBg" checked /> 扩边纯白</label>
+            <label class="flex items-center gap-1"><input type="radio" name="listingMode" value="direct" /> 强行等比</label>
+          </div>
+        </div>
+
+        <button class="btn btn-primary mt-4" id="listingExportBtn" disabled>📦 一键全自动打包 ZIP</button>
+      </div>
+    </aside>
+
+    <main class="canvas-darkroom">
+      <div class="canvas-container-mask">
+        <div class="darkroom-placeholder" id="placeholder">
+          <p class="text-lg font-bold mb-2">✦ 图像处理暗房 ✦</p>
+          <p class="text-sm opacity-60">请在左侧控制台导入电商原图素材</p>
+        </div>
+        <canvas id="mainCanvas"></canvas>
+      </div>
+      <div id="brushCursor"></div>
+    </main>
+
   </div>
 
   <script>
     // ================================================================
-    // 1. 主题切换
+    // 1. 双主题暗化切换
     // ================================================================
-    (function initTheme() {
-      const saved = localStorage.getItem('xiuxiutu_theme') || 'dark';
-      const body = document.body;
-      const btn = document.getElementById('themeToggle');
-      if (saved === 'light') { body.classList.add('light'); btn.textContent = '☀️'; }
-      else { body.classList.remove('light'); btn.textContent = '🌙'; }
-      btn.addEventListener('click', function() {
-        if (body.classList.contains('light')) {
-          body.classList.remove('light');
-          localStorage.setItem('xiuxiutu_theme', 'dark');
-          btn.textContent = '🌙';
-        } else {
-          body.classList.add('light');
-          localStorage.setItem('xiuxiutu_theme', 'light');
-          btn.textContent = '☀️';
-        }
+    (function() {
+      const current = localStorage.getItem('xiuxiutu_theme') || 'dark';
+      if(current === 'light') document.body.classList.add('light');
+      const toggle = document.getElementById('themeToggle');
+      toggle.textContent = current === 'light' ? '☀️ 浅色模式' : '🌙 深色模式';
+      toggle.addEventListener('click', () => {
+        const isLight = document.body.classList.toggle('light');
+        localStorage.setItem('xiuxiutu_theme', isLight ? 'light' : 'dark');
+        toggle.textContent = isLight ? '☀️ 浅色模式' : '🌙 深色模式';
+        if(uploadedImages.length) drawOverlay();
       });
     })();
 
-    // ================================================================
-    // 2. VIP 计费墙
-    // ================================================================
-    (function initVIP() {
-      const isVIP = localStorage.getItem('xiuxiutu_vip') === 'true';
-      if (!isVIP) {
-        if (localStorage.getItem('xiuxiutu_exportCount') === null) localStorage.setItem('xiuxiutu_exportCount', '0');
-        const count = parseInt(localStorage.getItem('xiuxiutu_exportCount') || '0');
-        if (count >= 5) document.getElementById('vipOverlay').classList.add('show');
-      }
-      window.activateVIP = function() {
-        localStorage.setItem('xiuxiutu_vip', 'true');
-        localStorage.setItem('xiuxiutu_exportCount', '0');
-        document.getElementById('vipOverlay').classList.remove('show');
-        alert('🎉 VIP 已激活！');
-      };
-      if (localStorage.getItem('xiuxiutu_vip') === 'true') {
-        document.getElementById('vipOverlay').classList.remove('show');
-        localStorage.setItem('xiuxiutu_exportCount', '0');
-      }
-    })();
+    function activateVIP() {
+      localStorage.setItem('xiuxiutu_vip', 'true');
+      localStorage.setItem('xiuxiutu_exportCount', '0');
+      document.getElementById('vipOverlay').style.display = 'none';
+      alert('🎉 VIP无限生产力特权已激活！');
+    }
 
     // ================================================================
-    // 3. 核心算法
+    // 2. 核心状态机与DOM映射
     // ================================================================
     let uploadedImages = [];
     let gap = 4;
     let currentMode = 'preview';
-    let brushSize = 30;
+    let brushSize = 40;
     let undoStack = [];
     let isDrawing = false;
     let lastPos = null;
     let cropRect = { x: 0, y: 0, w: 0, h: 0, ratio: 'free', dragging: false, startX: 0, startY: 0 };
-    let editWidth = 1600;
+    let editWidth = 1600; 
     let originalMaxWidth = 0;
-    let zoomLevel = 1.0; // 缩放比例
 
-    // DOM 元素
     const canvas = document.getElementById('mainCanvas');
     const ctx = canvas.getContext('2d');
-    const canvasContainer = document.getElementById('canvasContainer');
-    const canvasWrapper = document.getElementById('canvasWrapper');
     const fileInput = document.getElementById('fileInput');
-    const uploadMini = document.getElementById('uploadMini');
+    const uploadZone = document.getElementById('uploadZone');
     const thumbList = document.getElementById('thumbList');
     const gapSlider = document.getElementById('gapSlider');
     const gapLabel = document.getElementById('gapLabel');
@@ -738,43 +390,34 @@
     const exportBtn = document.getElementById('exportBtn');
     const exportFormat = document.getElementById('exportFormat');
     const brushCursor = document.getElementById('brushCursor');
-    const zoomSlider = document.getElementById('zoomSlider');
-    const zoomLabel = document.getElementById('zoomLabel');
+    const placeholder = document.getElementById('placeholder');
     const toolTabs = document.querySelectorAll('.tool-tab');
-    const toolStitch = document.getElementById('toolStitch');
-    const toolListing = document.getElementById('toolListing');
-
-    // 右键菜单
+    
     const floatingMenu = document.getElementById('floatingMenu');
     const menuBtns = floatingMenu.querySelectorAll('.menu-btn');
     const menuUndo = document.getElementById('menuUndo');
     const menuClear = document.getElementById('menuClear');
 
-    // ---------- 工具切换 ----------
+    // 双功能切页
     toolTabs.forEach(tab => {
       tab.addEventListener('click', function() {
         toolTabs.forEach(t => t.classList.remove('active'));
         this.classList.add('active');
-        if (this.dataset.tool === 'stitch') {
-          toolStitch.style.display = 'flex';
-          toolListing.style.display = 'none';
-        } else {
-          toolStitch.style.display = 'none';
-          toolListing.style.display = 'block';
-        }
+        const isStitch = this.dataset.tool === 'stitch';
+        document.getElementById('sideStitch').style.display = isStitch ? 'flex' : 'none';
+        document.getElementById('sideListing').style.display = isStitch ? 'none' : 'flex';
       });
     });
 
-    // ---------- 多图拼接 ----------
+    // ================================================================
+    // 3. 核心拼接渲染核心算法
+    // ================================================================
     function performStitch() {
       if (uploadedImages.length === 0) {
-        canvas.width = 0;
-        canvas.height = 0;
-        ctx.clearRect(0, 0, 0, 0);
-        updateThumbnails();
-        applyZoom();
-        return;
+        canvas.width = 0; canvas.height = 0; canvas.style.display = 'none';
+        placeholder.style.display = 'block'; updateThumbnails(); return;
       }
+      placeholder.style.display = 'none'; canvas.style.display = 'block';
 
       originalMaxWidth = Math.max(...uploadedImages.map(item => item.originalWidth));
       const targetWidth = Math.min(originalMaxWidth, editWidth);
@@ -782,13 +425,11 @@
       let totalHeight = 0;
       uploadedImages.forEach((item, index) => {
         const scale = targetWidth / item.originalWidth;
-        const targetHeight = Math.round(item.originalHeight * scale);
-        totalHeight += targetHeight;
+        totalHeight += Math.round(item.originalHeight * scale);
         if (index < uploadedImages.length - 1) totalHeight += gap;
       });
 
-      canvas.width = targetWidth;
-      canvas.height = totalHeight;
+      canvas.width = targetWidth; canvas.height = totalHeight;
 
       let yPos = 0;
       uploadedImages.forEach((item, index) => {
@@ -799,560 +440,212 @@
         if (index < uploadedImages.length - 1) yPos += gap;
       });
 
-      undoStack.push(canvas.toDataURL());
-      updateThumbnails();
-      resetCrop();
-      applyZoom();
+      undoStack = [canvas.toDataURL('image/jpeg', 0.85)];
+      updateThumbnails(); resetCrop();
     }
 
-    // ---------- 缩略图 ----------
     function updateThumbnails() {
       thumbList.innerHTML = '';
       uploadedImages.forEach((item, index) => {
-        const div = document.createElement('div');
-        div.className = 'thumb-item';
-        const img = document.createElement('img');
-        img.src = item.src;
-        div.appendChild(img);
-        const del = document.createElement('button');
-        del.className = 'del-btn';
-        del.textContent = '×';
-        del.addEventListener('click', (e) => {
-          e.stopPropagation();
-          removeImage(index);
-        });
-        div.appendChild(del);
+        const div = document.createElement('div'); div.className = 'thumb-item';
+        div.innerHTML = `<img src="${item.src}"><button class="del-btn">×</button>`;
+        div.querySelector('.del-btn').addEventListener('click', (e) => { e.stopPropagation(); uploadedImages.splice(index, 1); performStitch(); });
         thumbList.appendChild(div);
       });
     }
 
-    function removeImage(index) {
-      if (index >= 0 && index < uploadedImages.length) {
-        uploadedImages.splice(index, 1);
-        performStitch();
-        undoStack = [];
-        if (canvas.width > 0 && canvas.height > 0) undoStack.push(canvas.toDataURL());
-      }
-    }
-
-    // ---------- 加载图片 ----------
     function loadImageFiles(files) {
-      for (let f of files) {
-        if (!f.type.startsWith('image/')) continue;
+      let loaded = 0;
+      let targetFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+      if(targetFiles.length === 0) return;
+      
+      targetFiles.forEach((f) => {
         const reader = new FileReader();
         reader.onload = (e) => {
           const img = new Image();
           img.onload = () => {
-            uploadedImages.push({
-              img: img,
-              src: e.target.result,
-              name: f.name,
-              originalWidth: img.width,
-              originalHeight: img.height
-            });
-            performStitch();
-            undoStack = [];
-            if (canvas.width > 0 && canvas.height > 0) undoStack.push(canvas.toDataURL());
+            uploadedImages.push({ img, src: e.target.result, originalWidth: img.width, originalHeight: img.height });
+            loaded++; if (loaded === targetFiles.length) performStitch();
           };
           img.src = e.target.result;
         };
         reader.readAsDataURL(f);
-      }
-      fileInput.value = '';
+      });
     }
 
-    // ---------- 撤销 ----------
+    // 绑定上传监听（彻底修复点击失效死穴）
+    uploadZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', function() { if (this.files.length) loadImageFiles(this.files); });
+
     function undo() {
       if (undoStack.length <= 1) return;
       undoStack.pop();
-      const prevState = undoStack[undoStack.length - 1];
-      if (prevState) {
-        const img = new Image();
-        img.onload = () => {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(img, 0, 0);
-          resetCrop();
-          applyZoom();
-        };
-        img.src = prevState;
-      }
+      const img = new Image();
+      img.onload = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0); if (currentMode === 'crop') drawOverlay(); };
+      img.src = undoStack[undoStack.length - 1];
     }
 
-    // ---------- 清除 ----------
-    function clearAll() {
-      uploadedImages = [];
-      canvas.width = 0;
-      canvas.height = 0;
-      ctx.clearRect(0, 0, 0, 0);
-      undoStack = [];
-      updateThumbnails();
-      resetCrop();
-      brushCursor.style.display = 'none';
-      applyZoom();
-    }
+    function clearAll() { uploadedImages = []; canvas.width = 0; canvas.height = 0; undoStack = []; updateThumbnails(); resetCrop(); canvas.style.display = 'none'; placeholder.style.display = 'block'; brushCursor.style.display = 'none'; }
 
-    // ---------- 裁剪 ----------
-    function resetCrop() {
-      cropRect = { x: 0, y: 0, w: 0, h: 0, ratio: 'free', dragging: false, startX: 0, startY: 0 };
-      if (canvas.width > 0 && canvas.height > 0) {
-        cropRect.w = canvas.width;
-        cropRect.h = canvas.height;
-      }
-      drawOverlay();
-    }
+    // 智能网格裁剪
+    function resetCrop() { cropRect = { x: 0, y: 0, w: canvas.width, h: canvas.height, ratio: 'free', dragging: false, startX: 0, startY: 0 }; if (currentMode === 'crop') drawOverlay(); }
 
     function drawOverlay() {
       if (undoStack.length === 0) return;
-      const currentState = undoStack[undoStack.length - 1];
-      if (!currentState) return;
       const img = new Image();
       img.onload = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-        if (currentMode === 'crop' && cropRect.w > 0 && cropRect.h > 0) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0);
+        if (currentMode === 'crop') {
           const { x, y, w, h } = cropRect;
-          ctx.fillStyle = 'rgba(0,0,0,0.4)';
-          ctx.fillRect(0, 0, canvas.width, y);
-          ctx.fillRect(0, y, x, h);
-          ctx.fillRect(x + w, y, canvas.width - x - w, h);
-          ctx.fillRect(0, y + h, canvas.width, canvas.height - y - h);
-          ctx.strokeStyle = '#06B6D4';
-          ctx.lineWidth = 2;
-          ctx.setLineDash([6, 4]);
-          ctx.strokeRect(x, y, w, h);
-          ctx.setLineDash([]);
-          const corners = [[x,y],[x+w,y],[x,y+h],[x+w,y+h]];
-          corners.forEach(([cx,cy]) => {
-            ctx.fillStyle = '#06B6D4';
-            ctx.fillRect(cx-4, cy-4, 8, 8);
-          });
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.fillRect(0, 0, canvas.width, y); ctx.fillRect(0, y, x, h);
+          ctx.fillRect(x + w, y, canvas.width - x - w, h); ctx.fillRect(0, y + h, canvas.width, canvas.height - y - h);
+          ctx.strokeStyle = document.body.classList.contains('light') ? '#0284C7' : '#06B6D4';
+          ctx.lineWidth = 2; ctx.setLineDash([5, 4]); ctx.strokeRect(x, y, w, h); ctx.setLineDash([]);
         }
-        applyZoom(); // 重绘后重新应用缩放
       };
-      img.src = currentState;
+      img.src = undoStack[undoStack.length - 1];
     }
 
     function applyCrop() {
       if (cropRect.w < 10 || cropRect.h < 10) return;
       const { x, y, w, h } = cropRect;
-      const imageData = ctx.getImageData(x, y, w, h);
-      canvas.width = w;
-      canvas.height = h;
-      ctx.putImageData(imageData, 0, 0);
-      undoStack.pop();
-      undoStack.push(canvas.toDataURL());
-      resetCrop();
-      setMode('preview');
-      applyZoom();
+      const data = ctx.getImageData(x, y, w, h);
+      canvas.width = w; canvas.height = h; ctx.putImageData(data, 0, 0);
+      undoStack.push(canvas.toDataURL('image/jpeg', 0.85)); resetCrop(); setMode('preview');
     }
 
-    // ---------- 马赛克 ----------
+    // 像素马赛克
     function applyMosaicAt(pos) {
       const half = brushSize / 2;
-      const x = Math.max(0, pos.x - half);
-      const y = Math.max(0, pos.y - half);
-      const w = Math.min(brushSize, canvas.width - x);
-      const h = Math.min(brushSize, canvas.height - y);
+      const x = Math.max(0, Math.floor(pos.x - half)), y = Math.max(0, Math.floor(pos.y - half));
+      const w = Math.min(brushSize, canvas.width - x), h = Math.min(brushSize, canvas.height - y);
       if (w <= 0 || h <= 0) return;
-      const mosaicSize = Math.max(2, Math.floor(brushSize / 6));
-      const offscreen = document.createElement('canvas');
-      offscreen.width = mosaicSize;
-      offscreen.height = Math.floor(mosaicSize * (h / w));
-      const offCtx = offscreen.getContext('2d');
-      offCtx.imageSmoothingEnabled = false;
-      offCtx.drawImage(canvas, x, y, w, h, 0, 0, offscreen.width, offscreen.height);
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(offscreen, x, y, w, h);
+      const mSize = Math.max(4, Math.floor(brushSize / 8));
+      const off = document.createElement('canvas'); off.width = mSize; off.height = Math.max(4, Math.floor(mSize * (h / w)));
+      const oCtx = off.getContext('2d'); oCtx.imageSmoothingEnabled = false;
+      oCtx.drawImage(canvas, x, y, w, h, 0, 0, off.width, off.height);
+      ctx.save(); ctx.imageSmoothingEnabled = false; ctx.drawImage(off, x, y, w, h); ctx.restore();
     }
 
-    // ---------- 模糊 ----------
+    // 模糊算法
     function applyBlurAt(pos) {
       const half = brushSize / 2;
-      const x = Math.max(0, pos.x - half);
-      const y = Math.max(0, pos.y - half);
-      const w = Math.min(brushSize, canvas.width - x);
-      const h = Math.min(brushSize, canvas.height - y);
+      const x = Math.max(0, Math.floor(pos.x - half)), y = Math.max(0, Math.floor(pos.y - half));
+      const w = Math.min(brushSize, canvas.width - x), h = Math.min(brushSize, canvas.height - y);
       if (w <= 0 || h <= 0) return;
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = w;
-      tempCanvas.height = h;
-      const tempCtx = tempCanvas.getContext('2d');
-      tempCtx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
-      ctx.save();
-      ctx.filter = 'blur(8px)';
-      ctx.drawImage(tempCanvas, x, y, w, h);
-      ctx.restore();
+      const temp = document.createElement('canvas'); temp.width = w; temp.height = h;
+      temp.getContext('2d').drawImage(canvas, x, y, w, h, 0, 0, w, h);
+      ctx.save(); ctx.beginPath(); ctx.arc(pos.x, pos.y, brushSize / 2, 0, Math.PI * 2); ctx.clip();
+      ctx.filter = 'blur(6px)'; ctx.drawImage(temp, x, y); ctx.restore();
     }
 
-    // ---------- 绘制事件 ----------
     function startDraw(e) {
-      e.preventDefault();
-      if (currentMode === 'preview') return;
+      if (currentMode === 'preview' || uploadedImages.length === 0) return;
+      e.preventDefault(); const pos = getCanvasPos(e);
       if (currentMode === 'crop') {
-        const pos = getCanvasPos(e);
-        if (cropRect.w > 0 && cropRect.h > 0) {
-          cropRect.dragging = true;
-          cropRect.startX = pos.x;
-          cropRect.startY = pos.y;
-          if (pos.x >= cropRect.x && pos.x <= cropRect.x + cropRect.w &&
-              pos.y >= cropRect.y && pos.y <= cropRect.y + cropRect.h) {
-          } else {
-            cropRect.x = pos.x;
-            cropRect.y = pos.y;
-            cropRect.w = 0;
-            cropRect.h = 0;
-          }
-        } else {
-          cropRect.x = pos.x;
-          cropRect.y = pos.y;
-          cropRect.w = 0;
-          cropRect.h = 0;
-          cropRect.dragging = true;
-          cropRect.startX = pos.x;
-          cropRect.startY = pos.y;
-        }
+        cropRect.dragging = true; cropRect.startX = pos.x; cropRect.startY = pos.y;
+        if (!(pos.x >= cropRect.x && pos.x <= cropRect.x + cropRect.w && pos.y >= cropRect.y && pos.y <= cropRect.y + cropRect.h)) { cropRect.x = pos.x; cropRect.y = pos.y; cropRect.w = 0; cropRect.h = 0; }
         return;
       }
-      const pos = getCanvasPos(e);
-      isDrawing = true;
-      lastPos = pos;
-      if (currentMode === 'mosaic') applyMosaicAt(pos);
-      else if (currentMode === 'blur') applyBlurAt(pos);
-      else if (currentMode === 'solid') {
-        ctx.fillStyle = '#333333';
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, brushSize / 2, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      isDrawing = true; lastPos = pos;
+      if (currentMode === 'mosaic') applyMosaicAt(pos); else if (currentMode === 'blur') applyBlurAt(pos);
     }
 
     function moveDraw(e) {
-      e.preventDefault();
-      if (currentMode === 'preview') return;
-      if (currentMode === 'crop') {
-        if (!cropRect.dragging) return;
-        const pos = getCanvasPos(e);
-        let x = Math.min(cropRect.startX, pos.x);
-        let y = Math.min(cropRect.startY, pos.y);
-        let w = Math.abs(pos.x - cropRect.startX);
-        let h = Math.abs(pos.y - cropRect.startY);
+      if (currentMode === 'preview' || uploadedImages.length === 0) return;
+      e.preventDefault(); const pos = getCanvasPos(e);
+      if (currentMode === 'crop' && cropRect.dragging) {
+        let w = Math.abs(pos.x - cropRect.startX), h = Math.abs(pos.y - cropRect.startY);
+        let x = Math.min(cropRect.startX, pos.x), y = Math.min(cropRect.startY, pos.y);
         if (cropRect.ratio !== 'free') {
-          const [rw, rh] = cropRect.ratio.split(':').map(Number);
-          const target = rw / rh;
-          if (w / h > target) w = h * target;
-          else h = w / target;
-          const cx = (cropRect.startX + pos.x) / 2;
-          const cy = (cropRect.startY + pos.y) / 2;
-          x = cx - w / 2;
-          y = cy - h / 2;
+          const [rw, rh] = cropRect.ratio.split(':').map(Number); const target = rw / rh;
+          if (w / h > target) w = h * target; else h = w / target;
+          x = pos.x < cropRect.startX ? cropRect.startX - w : cropRect.startX; y = pos.y < cropRect.startY ? cropRect.startY - h : cropRect.startY;
         }
-        cropRect.x = Math.max(0, x);
-        cropRect.y = Math.max(0, y);
-        cropRect.w = Math.min(w, canvas.width - cropRect.x);
-        cropRect.h = Math.min(h, canvas.height - cropRect.y);
-        drawOverlay();
-        return;
+        cropRect.x = Math.max(0, x); cropRect.y = Math.max(0, y); cropRect.w = Math.min(w, canvas.width - cropRect.x); cropRect.h = Math.min(h, canvas.height - cropRect.y);
+        drawOverlay(); return;
       }
       if (!isDrawing || !lastPos) return;
-      const pos = getCanvasPos(e);
       const dist = Math.hypot(pos.x - lastPos.x, pos.y - lastPos.y);
-      if (dist > 2) {
-        const steps = Math.ceil(dist / 4);
-        for (let i = 1; i <= steps; i++) {
-          const t = i / steps;
-          const x = lastPos.x + (pos.x - lastPos.x) * t;
-          const y = lastPos.y + (pos.y - lastPos.y) * t;
-          if (currentMode === 'mosaic') applyMosaicAt({ x, y });
-          else if (currentMode === 'blur') applyBlurAt({ x, y });
-          else if (currentMode === 'solid') {
-            ctx.fillStyle = '#333333';
-            ctx.beginPath();
-            ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-        lastPos = pos;
+      const steps = Math.ceil(dist / 3);
+      for (let i = 1; i <= steps; i++) {
+        const t = i / steps; const x = lastPos.x + (pos.x - lastPos.x) * t, y = lastPos.y + (pos.y - lastPos.y) * t;
+        if (currentMode === 'mosaic') applyMosaicAt({ x, y }); else if (currentMode === 'blur') applyBlurAt({ x, y });
       }
+      lastPos = pos;
     }
 
-    function endDraw(e) {
-      if (currentMode === 'crop') {
-        cropRect.dragging = false;
-        return;
-      }
-      if (isDrawing) {
-        isDrawing = false;
-        if (canvas.width > 0 && canvas.height > 0) {
-          undoStack.push(canvas.toDataURL());
-          if (undoStack.length > 30) undoStack.shift();
-        }
-      }
-    }
+    function endDraw() { if (currentMode === 'crop') { cropRect.dragging = false; return; } if (isDrawing) { isDrawing = false; lastPos = null; undoStack.push(canvas.toDataURL('image/jpeg', 0.85)); if (undoStack.length > 20) undoStack.shift(); } }
 
     function getCanvasPos(e) {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      let clientX, clientY;
-      if (e.touches) {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-      } else {
-        clientX = e.clientX;
-        clientY = e.clientY;
-      }
-      return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+      const rect = canvas.getBoundingClientRect(); const clientX = e.touches ? e.touches[0].clientX : e.clientX, clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) };
     }
 
-    // ---------- 模式切换 ----------
     function setMode(mode) {
       currentMode = mode;
       modeBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
-      menuBtns.forEach(btn => {
-        btn.classList.toggle('active-mode', btn.dataset.mode === mode);
-      });
+      menuBtns.forEach(btn => btn.classList.toggle('active-mode', btn.dataset.mode === mode));
       brushGroup.style.display = (mode === 'preview' || mode === 'crop') ? 'none' : 'flex';
       cropRatioPanel.style.display = (mode === 'crop') ? 'block' : 'none';
-      if (mode === 'preview') {
-        canvas.style.cursor = 'default';
-        brushCursor.style.display = 'none';
-      } else if (mode === 'crop') {
-        canvas.style.cursor = 'crosshair';
-        brushCursor.style.display = 'none';
-      } else {
-        canvas.style.cursor = 'crosshair';
-        brushCursor.style.display = 'block';
-        brushCursor.style.width = brushSize + 'px';
-        brushCursor.style.height = brushSize + 'px';
-      }
-      if (mode === 'crop' && canvas.width > 0 && cropRect.w === 0) {
-        cropRect.x = 0;
-        cropRect.y = 0;
-        cropRect.w = canvas.width;
-        cropRect.h = canvas.height;
-      }
+      canvas.style.cursor = mode === 'preview' ? 'default' : 'crosshair';
+      if (mode !== 'preview' && mode !== 'crop' && uploadedImages.length) {
+        brushCursor.style.width = brushSize + 'px'; brushCursor.style.height = brushSize + 'px';
+      } else brushCursor.style.display = 'none';
       drawOverlay();
     }
 
-    // ---------- 缩放控制 ----------
-    function applyZoom() {
-      const scale = zoomLevel;
-      canvasContainer.style.transform = `scale(${scale})`;
-      canvasContainer.style.transformOrigin = 'top left';
-      // 调整容器尺寸，让滚动条适应
-      if (canvas.width > 0 && canvas.height > 0) {
-        canvasWrapper.style.width = (canvas.width * scale) + 'px';
-        canvasWrapper.style.height = (canvas.height * scale) + 'px';
-      } else {
-        canvasWrapper.style.width = '100%';
-        canvasWrapper.style.height = 'auto';
-      }
-    }
-
-    zoomSlider.addEventListener('input', function() {
-      zoomLevel = parseInt(this.value) / 100;
-      zoomLabel.textContent = this.value + '%';
-      applyZoom();
-    });
-
-    // ---------- 导出 ----------
     function exportImage() {
-      if (uploadedImages.length === 0) {
-        alert('请先上传图片！');
-        return;
+      if (uploadedImages.length === 0) return;
+      if (localStorage.getItem('xiuxiutu_vip') !== 'true') {
+        let count = parseInt(localStorage.getItem('xiuxiutu_exportCount') || '0') + 1; localStorage.setItem('xiuxiutu_exportCount', count);
+        if (count >= 5) { document.getElementById('vipOverlay').style.display = 'flex'; return; }
       }
-      const isVIP = localStorage.getItem('xiuxiutu_vip') === 'true';
-      if (!isVIP) {
-        let count = parseInt(localStorage.getItem('xiuxiutu_exportCount') || '0');
-        count++;
-        localStorage.setItem('xiuxiutu_exportCount', count);
-        if (count >= 5) {
-          document.getElementById('vipOverlay').classList.add('show');
-          return;
-        }
-      }
-      const originalWidth = originalMaxWidth;
-      const exportCanvas = document.createElement('canvas');
+      const exportCanvas = document.createElement('canvas'); const exportCtx = exportCanvas.getContext('2d'); const baseWidth = originalMaxWidth;
       let totalHeight = 0;
-      uploadedImages.forEach((item, index) => {
-        totalHeight += item.originalHeight;
-        if (index < uploadedImages.length - 1) totalHeight += gap;
-      });
-      exportCanvas.width = originalWidth;
-      exportCanvas.height = totalHeight;
-      const exportCtx = exportCanvas.getContext('2d');
+      uploadedImages.forEach((item, index) => { const scale = baseWidth / item.originalWidth; totalHeight += Math.round(item.originalHeight * scale); if (index < uploadedImages.length - 1) totalHeight += gap; });
+      exportCanvas.width = baseWidth; exportCanvas.height = totalHeight;
       let yPos = 0;
-      uploadedImages.forEach((item, index) => {
-        exportCtx.drawImage(item.img, 0, yPos, item.originalWidth, item.originalHeight);
-        yPos += item.originalHeight;
-        if (index < uploadedImages.length - 1) yPos += gap;
-      });
+      uploadedImages.forEach((item, index) => { const scale = baseWidth / item.originalWidth; const targetHeight = Math.round(item.originalHeight * scale); exportCtx.drawImage(item.img, 0, yPos, baseWidth, targetHeight); yPos += targetHeight; if (index < uploadedImages.length - 1) yPos += gap; });
+      exportCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, exportCanvas.width, exportCanvas.height);
       let finalCanvas = exportCanvas;
-      if (cropRect.w > 0 && cropRect.h > 0 && cropRect.w < originalWidth && cropRect.h < totalHeight) {
-        const scaleX = originalWidth / canvas.width;
-        const scaleY = totalHeight / canvas.height;
-        const cropX = Math.round(cropRect.x * scaleX);
-        const cropY = Math.round(cropRect.y * scaleY);
-        const cropW = Math.round(cropRect.w * scaleX);
-        const cropH = Math.round(cropRect.h * scaleY);
-        const imageData = exportCtx.getImageData(cropX, cropY, cropW, cropH);
-        const croppedCanvas = document.createElement('canvas');
-        croppedCanvas.width = cropW;
-        croppedCanvas.height = cropH;
-        croppedCanvas.getContext('2d').putImageData(imageData, 0, 0);
-        finalCanvas = croppedCanvas;
+      if (cropRect.w < canvas.width || cropRect.h < canvas.height) {
+        const ratioX = baseWidth / canvas.width, ratioY = totalHeight / canvas.height;
+        const cropped = document.createElement('canvas'); cropped.width = Math.round(cropRect.w * ratioX); cropped.height = Math.round(cropRect.h * ratioY);
+        cropped.getContext('2d').drawImage(exportCanvas, Math.round(cropRect.x * ratioX), Math.round(cropRect.y * ratioY), cropped.width, cropped.height, 0, 0, cropped.width, cropped.height);
+        finalCanvas = cropped;
       }
-      const format = exportFormat.value;
-      const quality = 0.92;
-      finalCanvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `修修图_拼图.${format.split('/')[1]}`;
-        a.click();
-        URL.revokeObjectURL(url);
-      }, format, quality);
+      finalCanvas.toBlob((blob) => { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `修修图_完美高清拼图_${Date.now()}.${exportFormat.value.split('/')[1]}`; a.click(); URL.revokeObjectURL(url); }, exportFormat.value, 0.95);
     }
 
-    // ---------- 右键悬浮菜单 ----------
-    canvas.addEventListener('contextmenu', function(e) {
-      e.preventDefault();
-      floatingMenu.style.left = (e.clientX + 10) + 'px';
-      floatingMenu.style.top = (e.clientY + 10) + 'px';
-      floatingMenu.style.display = 'flex';
-      menuBtns.forEach(btn => {
-        btn.classList.toggle('active-mode', btn.dataset.mode === currentMode);
-      });
-    });
+    // 右键随手菜单弹出
+    canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); floatingMenu.style.left = (e.clientX + 12) + 'px'; floatingMenu.style.top = (e.clientY + 12) + 'px'; floatingMenu.style.display = 'flex'; menuBtns.forEach(btn => btn.classList.toggle('active-mode', btn.dataset.mode === currentMode)); });
+    menuBtns.forEach(btn => btn.addEventListener('click', function() { if (this.dataset.mode) setMode(this.dataset.mode); floatingMenu.style.display = 'none'; }));
+    menuUndo.addEventListener('click', () => { undo(); floatingMenu.style.display = 'none'; });
+    menuClear.addEventListener('click', () => { clearAll(); floatingMenu.style.display = 'none'; });
+    floatingMenu.addEventListener('mouseleave', () => floatingMenu.style.display = 'none');
+    document.addEventListener('click', (e) => { if (!floatingMenu.contains(e.target)) floatingMenu.style.display = 'none'; });
 
-    menuBtns.forEach(btn => {
-      btn.addEventListener('click', function() {
-        const mode = this.dataset.mode;
-        if (mode) {
-          setMode(mode);
-          modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-        }
-        floatingMenu.style.display = 'none';
-      });
-    });
+    // 其他事件监听
+    gapSlider.addEventListener('input', function() { gap = parseInt(this.value); gapLabel.textContent = gap + 'px'; if (uploadedImages.length) performStitch(); });
+    brushSlider.addEventListener('input', function() { brushSize = parseInt(this.value); brushLabel.textContent = brushSize; if (brushCursor.style.display === 'block') { brushCursor.style.width = brushSize + 'px'; brushCursor.style.height = brushSize + 'px'; } });
+    modeBtns.forEach(btn => btn.addEventListener('click', function() { setMode(this.dataset.mode); }));
+    cropRatioBtns.forEach(btn => { btn.addEventListener('click', function() { cropRatioBtns.forEach(b => b.classList.remove('active')); this.classList.add('active'); cropRect.ratio = this.dataset.ratio; if (canvas.width > 0 && cropRect.ratio !== 'free') { const [rw, rh] = cropRect.ratio.split(':').map(Number); const target = rw / rh; cropRect.w = canvas.width; cropRect.h = canvas.width / target; if (cropRect.h > canvas.height) { cropRect.h = canvas.height; cropRect.w = canvas.height * target; } drawOverlay(); } }); });
+    applyCropBtn.addEventListener('click', applyCrop); resetCropBtn.addEventListener('click', resetCrop);
 
-    menuUndo.addEventListener('click', function() {
-      undo();
-      floatingMenu.style.display = 'none';
-    });
-    menuClear.addEventListener('click', function() {
-      clearAll();
-      floatingMenu.style.display = 'none';
-    });
-
-    floatingMenu.addEventListener('mouseleave', function() {
-      floatingMenu.style.display = 'none';
-    });
-    document.addEventListener('click', function(e) {
-      if (!floatingMenu.contains(e.target)) {
-        floatingMenu.style.display = 'none';
-      }
-    });
-
-    // ---------- 事件绑定 ----------
-    uploadMini.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', function() {
-      if (this.files) loadImageFiles(this.files);
-      this.value = '';
-    });
-    // 拖拽支持（整个控制条区域作为拖拽区）
-    document.querySelector('.control-bar-compact').addEventListener('dragover', (e) => { e.preventDefault(); });
-    document.querySelector('.control-bar-compact').addEventListener('drop', (e) => {
-      e.preventDefault();
-      if (e.dataTransfer.files) loadImageFiles(e.dataTransfer.files);
-    });
-
-    gapSlider.addEventListener('input', function() {
-      gap = parseInt(this.value);
-      gapLabel.textContent = gap;
-      if (uploadedImages.length > 0) {
-        performStitch();
-        undoStack = [];
-        undoStack.push(canvas.toDataURL());
-        resetCrop();
-        if (currentMode === 'crop') drawOverlay();
-      }
-    });
-
-    brushSlider.addEventListener('input', function() {
-      brushSize = parseInt(this.value);
-      brushLabel.textContent = brushSize;
-      if (currentMode !== 'preview' && currentMode !== 'crop') {
-        brushCursor.style.width = brushSize + 'px';
-        brushCursor.style.height = brushSize + 'px';
-      }
-    });
-
-    modeBtns.forEach(btn => {
-      btn.addEventListener('click', function() {
-        setMode(this.dataset.mode);
-      });
-    });
-
-    cropRatioBtns.forEach(btn => {
-      btn.addEventListener('click', function() {
-        cropRatioBtns.forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        cropRect.ratio = this.dataset.ratio;
-        if (cropRect.w > 0 && cropRect.h > 0) {
-          const [rw, rh] = cropRect.ratio.split(':').map(Number);
-          const target = rw / rh;
-          const current = cropRect.w / cropRect.h;
-          if (current > target) cropRect.w = cropRect.h * target;
-          else cropRect.h = cropRect.w / target;
-          drawOverlay();
-        }
-      });
-    });
-
-    applyCropBtn.addEventListener('click', applyCrop);
-    resetCropBtn.addEventListener('click', function() {
-      if (canvas.width > 0 && canvas.height > 0) {
-        cropRect.x = 0;
-        cropRect.y = 0;
-        cropRect.w = canvas.width;
-        cropRect.h = canvas.height;
-        drawOverlay();
-      }
-    });
-
-    canvas.addEventListener('mousedown', startDraw);
-    canvas.addEventListener('mousemove', (e) => {
-      if (currentMode !== 'preview' && currentMode !== 'crop') {
-        brushCursor.style.left = e.clientX + 'px';
-        brushCursor.style.top = e.clientY + 'px';
-      }
-      moveDraw(e);
-    });
-    canvas.addEventListener('mouseup', endDraw);
-    canvas.addEventListener('mouseleave', endDraw);
-
-    canvas.addEventListener('touchstart', startDraw, { passive: false });
-    canvas.addEventListener('touchmove', (e) => {
-      if (currentMode !== 'preview' && currentMode !== 'crop') {
-        const touch = e.touches[0];
-        brushCursor.style.left = touch.clientX + 'px';
-        brushCursor.style.top = touch.clientY + 'px';
-      }
-      moveDraw(e);
-    }, { passive: false });
-    canvas.addEventListener('touchend', endDraw);
-
-    undoBtn.addEventListener('click', undo);
-    clearBtn.addEventListener('click', clearAll);
-    exportBtn.addEventListener('click', exportImage);
-
-    // 初始化模式
-    setMode('preview');
-    applyZoom();
+    const syncCursor = (cx, cy) => {
+      if (currentMode !== 'preview' && currentMode !== 'crop' && uploadedImages.length) {
+        const r = canvas.getBoundingClientRect();
+        if (cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) { brushCursor.style.display = 'block'; brushCursor.style.left = cx + 'px'; brushCursor.style.top = cy + 'px'; return; }
+      } brushCursor.style.display = 'none';
+    };
+    canvas.addEventListener('mousedown', startDraw); canvas.addEventListener('mousemove', (e) => { syncCursor(e.clientX, e.clientY); moveDraw(e); }); canvas.addEventListener('mouseup', endDraw); canvas.addEventListener('mouseleave', endDraw);
+    canvas.addEventListener('touchstart', startDraw, { passive: false }); canvas.addEventListener('touchmove', (e) => { const t = e.touches[0]; syncCursor(t.clientX, t.clientY); moveDraw(e); }, { passive: false }); canvas.addEventListener('touchend', endDraw);
+    undoBtn.addEventListener('click', undo); clearBtn.addEventListener('click', clearAll); exportBtn.addEventListener('click', exportImage);
 
     // ================================================================
-    // 4. 一键上架（完整保留）
+    // 4. 一键上架模块
     // ================================================================
     const listingUploadZone = document.getElementById('listingUploadZone');
     const listingFileInput = document.getElementById('listingFileInput');
@@ -1363,125 +656,37 @@
     let listingImage = null;
 
     listingUploadZone.addEventListener('click', () => listingFileInput.click());
-    listingUploadZone.addEventListener('dragover', (e) => e.preventDefault());
-    listingUploadZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      const file = e.dataTransfer.files[0];
-      if (file && file.type.startsWith('image/')) loadListingImage(file);
-    });
-    listingFileInput.addEventListener('change', function(e) {
-      if (this.files && this.files[0]) loadListingImage(this.files[0]);
-      this.value = '';
-    });
+    listingFileInput.addEventListener('change', function() { if (this.files.length) { const r = new FileReader(); r.onload = (e) => { const img = new Image(); img.onload = () => { listingImage = img; listingPreviewImg.src = e.target.result; listingPreviewArea.style.display = 'block'; listingExportBtn.disabled = false; }; img.src = e.target.result; }; r.readAsDataURL(this.files[0]); } });
+    function resetListing() { listingImage = null; listingPreviewArea.style.display = 'none'; listingExportBtn.disabled = true; }
 
-    function loadListingImage(file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          listingImage = img;
-          listingPreviewImg.src = e.target.result;
-          listingPreviewArea.style.display = 'block';
-          updateListingExportBtn();
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function resetListing() {
-      listingImage = null;
-      listingPreviewArea.style.display = 'none';
-      listingPreviewImg.src = '';
-      updateListingExportBtn();
-    }
-
-    function getSelectedPlatforms() {
-      const checkboxes = platformSelector.querySelectorAll('input[type="checkbox"]:checked');
-      return Array.from(checkboxes).map(cb => cb.value);
-    }
-
-    function getListingMode() {
-      const radio = document.querySelector('input[name="listingMode"]:checked');
-      return radio ? radio.value : 'whiteBg';
-    }
-
-    function updateListingExportBtn() {
-      const selected = getSelectedPlatforms();
-      listingExportBtn.disabled = !listingImage || selected.length === 0;
-    }
-
-    platformSelector.addEventListener('change', updateListingExportBtn);
-    document.querySelectorAll('input[name="listingMode"]').forEach(radio => {
-      radio.addEventListener('change', updateListingExportBtn);
-    });
-
-    const PLATFORM_SIZES = {
-      taobao: { name: '淘宝', sizes: [{ label: '主图-白底', w: 800, h: 800, whiteBg: true }, { label: '主图-场景', w: 800, h: 800, whiteBg: false }, { label: '详情图', w: 750, h: 0, whiteBg: false }, { label: 'PC主图', w: 460, h: 460, whiteBg: false }] },
-      pdd: { name: '拼多多', sizes: [{ label: '主图', w: 800, h: 800, whiteBg: false }, { label: '轮播图', w: 800, h: 800, whiteBg: false }, { label: '详情图', w: 750, h: 0, whiteBg: false }, { label: '白底图', w: 480, h: 480, whiteBg: true }] },
-      douyin: { name: '抖音', sizes: [{ label: '商品主图', w: 800, h: 800, whiteBg: false }, { label: '详情图', w: 750, h: 0, whiteBg: false }, { label: '封面图', w: 1080, h: 1440, whiteBg: false }] },
-      xiaohongshu: { name: '小红书', sizes: [{ label: '竖版笔记', w: 1080, h: 1440, whiteBg: false }, { label: '横版封面', w: 1440, h: 1080, whiteBg: false }, { label: '方图', w: 800, h: 800, whiteBg: false }] },
-      jingdong: { name: '京东', sizes: [{ label: '主图-白底', w: 800, h: 800, whiteBg: true }, { label: '主图-场景', w: 800, h: 800, whiteBg: false }, { label: '详情图', w: 750, h: 0, whiteBg: false }, { label: '白底图(大)', w: 1000, h: 1000, whiteBg: true }] },
-      amazon: { name: '亚马逊', sizes: [{ label: '主图-白底', w: 1600, h: 1600, whiteBg: true }, { label: '辅图', w: 1600, h: 1600, whiteBg: false }, { label: 'A+内容图', w: 970, h: 600, whiteBg: false }] }
+    const P_SIZES = {
+      taobao: { name: '淘宝', sizes: [{ label: '主图-白底', w: 800, h: 800, whiteBg: true }, { label: '主图-场景', w: 800, h: 800, whiteBg: false }] },
+      pdd: { name: '拼多多', sizes: [{ label: '主图', w: 800, h: 800, whiteBg: false }, { label: '白底图', w: 480, h: 480, whiteBg: true }] },
+      douyin: { name: '抖音', sizes: [{ label: '商品主图', w: 800, h: 800, whiteBg: false }, { label: '封面图', w: 1080, h: 1440, whiteBg: false }] },
+      xiaohongshu: { name: '小红书', sizes: [{ label: '竖版笔记', w: 1080, h: 1440, whiteBg: false }, { label: '方图', w: 800, h: 800, whiteBg: false }] },
+      jingdong: { name: '京东', sizes: [{ label: '主图-白底', w: 800, h: 800, whiteBg: true }, { label: '白底图(大)', w: 1000, h: 1000, whiteBg: true }] },
+      amazon: { name: '亚马逊', sizes: [{ label: '主图-白底', w: 1600, h: 1600, whiteBg: true }, { label: '辅图', w: 1600, h: 1600, whiteBg: false }] }
     };
 
     listingExportBtn.addEventListener('click', async function() {
-      if (!listingImage || getSelectedPlatforms().length === 0) return;
-      const isVIP = localStorage.getItem('xiuxiutu_vip') === 'true';
-      if (!isVIP) {
-        let count = parseInt(localStorage.getItem('xiuxiutu_exportCount') || '0');
-        count++;
-        localStorage.setItem('xiuxiutu_exportCount', count);
-        if (count >= 5) { document.getElementById('vipOverlay').classList.add('show'); return; }
-      }
-      const zip = new JSZip();
-      const mode = getListingMode();
-      const platforms = getSelectedPlatforms();
-      platforms.forEach(pKey => {
-        const platform = PLATFORM_SIZES[pKey];
-        if (!platform) return;
-        const folder = zip.folder(platform.name);
-        platform.sizes.forEach(size => {
-          const canvas = generateSizeCanvas(listingImage, size, mode);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-          const base64 = dataUrl.split(',')[1];
-          const filename = `${size.label}_${size.w}×${canvas.height}.jpg`;
-          folder.file(filename, base64, { base64: true });
+      if (!listingImage) return;
+      const zip = new JSZip(); const mode = document.querySelector('input[name="listingMode"]:checked').value;
+      const checked = Array.from(platformSelector.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+      checked.forEach(pKey => {
+        const p = P_SIZES[pKey]; if (!p) return; const folder = zip.folder(p.name);
+        p.sizes.forEach(sz => {
+          const cvs = document.createElement('canvas'); let w = sz.w, h = sz.h === 0 ? Math.round(w / (listingImage.naturalWidth / listingImage.naturalHeight)) : sz.h;
+          cvs.width = w; cvs.height = h; const c = cvs.getContext('2d');
+          if (sz.whiteBg || mode === 'whiteBg') { c.fillStyle = '#FFFFFF'; c.fillRect(0, 0, w, h); const s = Math.min(w / listingImage.naturalWidth, h / listingImage.naturalHeight); const dw = listingImage.naturalWidth * s, dh = listingImage.naturalHeight * s; c.drawImage(listingImage, (w - dw)/2, (h - dh)/2, dw, dh); }
+          else { c.drawImage(listingImage, 0, 0, w, h); }
+          folder.file(`${sz.label}_${w}×${h}.jpg`, cvs.toDataURL('image/jpeg', 0.9).split(',')[1], { base64: true });
         });
       });
-      const blob = await zip.generateAsync({ type: 'blob' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = '修修图_全平台图片包.zip';
-      a.click();
-      URL.revokeObjectURL(url);
+      const blob = await zip.generateAsync({ type: 'blob' }); const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = '修修图_全平台图片包.zip'; a.click(); URL.revokeObjectURL(url);
     });
 
-    function generateSizeCanvas(img, size, mode) {
-      const canvas = document.createElement('canvas');
-      let w = size.w, h = size.h;
-      if (h === 0) h = Math.round(w / (img.naturalWidth / img.naturalHeight));
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      const useWhiteBg = (size.whiteBg || mode === 'whiteBg');
-      if (useWhiteBg) {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, w, h);
-        const scale = Math.min(w / img.naturalWidth, h / img.naturalHeight);
-        const dw = img.naturalWidth * scale, dh = img.naturalHeight * scale;
-        const dx = (w - dw) / 2, dy = (h - dh) / 2;
-        ctx.drawImage(img, dx, dy, dw, dh);
-      } else {
-        ctx.drawImage(img, 0, 0, w, h);
-      }
-      return canvas;
-    }
-
-    updateListingExportBtn();
-
-    console.log('✅ 修修图 · 电商工作台 紧凑布局+缩放版已加载！');
+    console.log('✅ 修修图 · 电商工作台 全量通道无损修复完毕！');
   </script>
 </body>
 </html>
