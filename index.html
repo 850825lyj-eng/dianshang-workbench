@@ -73,13 +73,11 @@
     .platform-card:hover { border-color: var(--color-primary); background: rgba(6,182,212,0.05); }
     .platform-card.selected { border-color: var(--color-primary); background: rgba(6,182,212,0.08); box-shadow: 0 2px 8px rgba(6,182,212,0.12); }
 
-    .theme-toggle-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border-light); background: transparent; cursor: pointer; font-size: 0.8rem; font-weight: 600; color: var(--color-text-secondary); transition: all 0.2s; }
+    .theme-toggle-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border-light); background: transparent; cursor: pointer; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); transition: all 0.2s; }
     .theme-toggle-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
     .bg-gray-900 { background: var(--bg-card) !important; border-top: 1px solid var(--border-light); }
 
     .main-headline { color: var(--color-text) !important; }
-    
-    /* 吸顶控制条（防止长图修图找不到工具） */
     .lg\:sticky { top: 5rem !important; }
 
     /* ========== 右键快捷菜单毛玻璃面板 ========== */
@@ -94,6 +92,7 @@
 </head>
 <body class="bg-gray-50 text-gray-900 font-sans antialiased">
 
+  <!-- 右键胶囊菜单 -->
   <div id="floatingMenu">
     <button class="menu-btn" data-mode="preview">📐 预览</button>
     <button class="menu-btn" data-mode="mosaic">🧩 马赛克</button>
@@ -103,6 +102,7 @@
     <button class="menu-btn" id="menuClear">🗑️</button>
   </div>
 
+  <!-- ==================== 导航栏 ==================== -->
   <nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm h-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-full">
       <div class="flex items-center gap-2">
@@ -132,6 +132,7 @@
     </div>
   </nav>
 
+  <!-- ==================== Banner 首页区 ==================== -->
   <section id="home" class="bg-gradient-to-br from-indigo-50 to-white py-20 px-4">
     <div class="max-w-4xl mx-auto text-center">
       <h1 class="main-headline text-4xl sm:text-5xl font-extrabold mb-4 leading-tight">
@@ -146,6 +147,7 @@
     </div>
   </section>
 
+  <!-- ==================== 工具操作区 ==================== -->
   <section id="tool" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex justify-center gap-4 mb-6" id="main-tabs">
       <button class="main-tab active" data-tool="stitch" onclick="switchTool('stitch')">📱 拼图 / 打码 / 裁剪</button>
@@ -264,125 +266,85 @@
     </div>
   </section>
 
+  <!-- ==================== 产品介绍（4字极简词组重构版） ==================== -->
   <section id="features" class="bg-white py-16 px-4">
     <div class="max-w-6xl mx-auto text-center">
-      <h2 class="text-3xl font-extrabold mb-4">四大核心功能</h2>
-      <p class="text-sm mb-12 opacity-60">从拼图到上架，一个工具全搞定。</p>
+      <h2 class="text-3xl font-extrabold mb-12">核心功能</h2>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
         <div class="p-6 rounded-2xl border border-gray-100 shadow-sm bg-white">
           <div class="text-3xl mb-3">📱</div>
           <h3 class="text-lg font-bold mb-1">聊天拼接</h3>
-          <p class="text-xs opacity-70">多图垂直快速连拼</p>
+          <p class="text-xs opacity-70">多图连拼</p>
         </div>
         <div class="p-6 rounded-2xl border border-gray-100 shadow-sm bg-white">
           <div class="text-3xl mb-3">🔲</div>
           <h3 class="text-lg font-bold mb-1">隐私打码</h3>
-          <p class="text-xs opacity-70">脏区高效隐私脱敏</p>
+          <p class="text-xs opacity-70">智能打码</p>
         </div>
         <div class="p-6 rounded-2xl border border-gray-100 shadow-sm bg-white">
           <div class="text-3xl mb-3">✂️</div>
           <h3 class="text-lg font-bold mb-1">智能裁剪</h3>
-          <p class="text-xs opacity-70">自由与固定比例网格</p>
+          <p class="text-xs opacity-70">比例裁剪</p>
         </div>
         <div class="p-6 rounded-2xl border border-gray-100 shadow-sm bg-white">
           <div class="text-3xl mb-3">📦</div>
           <h3 class="feature-headline text-lg font-bold mb-1">一键上架</h3>
-          <p class="text-xs opacity-70">全网规格打包下载</p>
+          <p class="text-xs opacity-70">一键上架</p>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- ==================== 优势板块（最高密度词组提炼） ==================== -->
   <section id="advantages" class="py-16 px-4 bg-gray-50">
     <div class="max-w-6xl mx-auto text-center">
-      <h2 class="text-3xl font-extrabold mb-12">为什么选择修修图？</h2>
+      <h2 class="text-3xl font-extrabold mb-12">核心优势</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         <div class="flex flex-col items-center p-4 bg-white rounded-xl border border-gray-100">
           <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-xl mb-2">🔒</div>
           <h4 class="font-bold text-sm">纯本地处理</h4>
-          <p class="text-xs opacity-70 mt-1">图片不离设备，100%安全</p>
+          <p class="text-xs opacity-70 mt-1">本地沙盒·绝对安全</p>
         </div>
         <div class="flex flex-col items-center p-4 bg-white rounded-xl border border-gray-100">
           <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-xl mb-2">⚡</div>
           <h4 class="font-bold text-sm">高效处理</h4>
-          <p class="text-xs opacity-70 mt-1">秒级渲染，长图不卡顿</p>
+          <p class="text-xs opacity-70 mt-1">秒级渲染·不卡长图</p>
         </div>
         <div class="flex flex-col items-center p-4 bg-white rounded-xl border border-gray-100">
           <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-xl mb-2">🎯</div>
           <h4 class="font-bold text-sm">全平台覆盖</h4>
-          <p class="text-xs opacity-70 mt-1">主流电商规格全覆盖</p>
+          <p class="text-xs opacity-70 mt-1">全电商平台规格</p>
         </div>
         <div class="flex flex-col items-center p-4 bg-white rounded-xl border border-gray-100">
           <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-xl mb-2">🆓</div>
           <h4 class="font-bold text-sm">完全免费</h4>
-          <p class="text-xs opacity-70 mt-1">无需注册，无限次使用</p>
+          <p class="text-xs opacity-70 mt-1">不限次·免注册</p>
         </div>
       </div>
     </div>
   </section>
 
-  <section id="about" class="bg-white py-12 px-4 border-t border-gray-100">
-    <div class="max-w-3xl mx-auto text-center opacity-70 text-xs flex flex-col gap-2">
-      <p>专注隐私安全的个体电商影像生产力工具。所有处理均在浏览器本地完成，不上传服务器。</p>
-      <div class="flex justify-center gap-4 font-bold text-indigo-600">
-        <span>📧 hello@xiuxiutu.net</span>
-        <span>🛡️ 隐私优先</span>
-        <span>🌍 开源透明</span>
-      </div>
-    </div>
-  </section>
-
-  <footer class="bg-gray-900 py-6 px-4 text-center text-xs opacity-60">
-    <p>&copy; 2025 修修图 Xiuxiutu. 保留所有权利。全程沙盒本地处理。</p>
+  <!-- ==================== 关于我们与辅助版权（优雅沉底两行半） ==================== -->
+  <footer class="bg-gray-900 py-10 px-4 text-center text-xs flex flex-col gap-2 opacity-60">
+    <p>纯本地处理的电商影像生产力工具。商务合作：hello@xiuxiutu.net · 隐私优先 · 开源透明</p>
+    <p>&copy; 2025 修修图 Xiuxiutu. 保留所有权利。全程沙盒安全运行。</p>
   </footer>
 
   <script>
     // 主题切换
     function toggleTheme() {
-      const body = document.body;
-      const btn = document.getElementById('themeToggle');
-      if (body.classList.contains('light')) {
-        body.classList.remove('light');
-        btn.textContent = '🌙 深色模式';
-        localStorage.setItem('theme', 'dark');
-      } else {
-        body.classList.add('light');
-        btn.textContent = '☀️ 浅色模式';
-        localStorage.setItem('theme', 'light');
-      }
+      const body = document.body; const btn = document.getElementById('themeToggle');
+      if (body.classList.contains('light')) { body.classList.remove('light'); btn.textContent = '🌙 深色模式'; localStorage.setItem('theme', 'dark'); }
+      else { body.classList.add('light'); btn.textContent = '☀️ 浅色模式'; localStorage.setItem('theme', 'light'); }
       if(state.images.length) drawAll();
     }
-    (function() {
-      const saved = localStorage.getItem('theme') || 'dark';
-      if (saved === 'light') {
-        document.body.classList.add('light');
-        document.getElementById('themeToggle').textContent = '☀️ 浅色模式';
-      }
-    })();
+    (function() { const saved = localStorage.getItem('theme') || 'dark'; if (saved === 'light') { document.body.classList.add('light'); document.getElementById('themeToggle').textContent = '☀️ 浅色模式'; } })();
   </script>
 
   <script>
-    // ==================== 全局状态 ====================
-    const state = {
-      activeTool: 'stitch',
-      mode: 'preview',
-      images: [],
-      gap: 4,
-      brushSize: 40,
-      strokes: [],
-      stitchCanvas: null,
-      overlayCanvas: null,
-      crop: { x: 0, y: 0, w: 0, h: 0, ratio: 'free', dragging: false, resizing: null },
-      exportFormat: 'image/jpeg',
-      exportQuality: 92,
-      listingSrc: null,
-      listingImg: null,
-      selectedPlatforms: ['taobao'],
-      listingMode: 'whiteBg',
-    };
-
-    let isDrawing = false;
-    let lastPos = null;
+    // 全局状态机
+    const state = { activeTool: 'stitch', mode: 'preview', images: [], gap: 4, brushSize: 40, strokes: [], stitchCanvas: null, overlayCanvas: null, crop: { x: 0, y: 0, w: 0, h: 0, ratio: 'free', dragging: false, resizing: null }, exportFormat: 'image/jpeg', exportQuality: 92, listingSrc: null, listingImg: null, selectedPlatforms: ['taobao'], listingMode: 'whiteBg' };
+    let isDrawing = false; let lastPos = null;
 
     const PLATFORM_SIZES = {
       taobao: { name: '淘宝', sizes: [{ label: '主图-白底', w: 800, h: 800, whiteBg: true }, { label: '主图-场景', w: 800, h: 800, whiteBg: false }, { label: '详情图', w: 750, h: 0, whiteBg: false }, { label: 'PC主图', w: 460, h: 460, whiteBg: false }]},
@@ -394,205 +356,59 @@
     };
 
     // DOM 引用
-    const fileInput = document.getElementById('fileInput');
-    const fileInputListing = document.getElementById('fileInputListing');
-    const uploadAreaStitch = document.getElementById('upload-area-stitch');
-    const uploadAreaListing = document.getElementById('upload-area-listing');
-    const imageList = document.getElementById('image-list');
-    const imageCount = document.getElementById('image-count');
-    const gapSlider = document.getElementById('gap-slider');
-    const gapValue = document.getElementById('gap-value');
-    const brushSlider = document.getElementById('brush-slider');
-    const brushSizeVal = document.getElementById('brush-size-val');
-    const undoBtn = document.getElementById('undo-btn');
-    const clearStrokesBtn = document.getElementById('clear-strokes-btn');
-    const resetCropBtn = document.getElementById('reset-crop-btn');
-    const applyCropBtn = document.getElementById('apply-crop-btn');
-    const exportBtn = document.getElementById('export-btn');
-    const exportFormat = document.getElementById('export-format');
-    const exportQuality = document.getElementById('export-quality');
-    const exportQualityVal = document.getElementById('export-quality-val');
-    const mainCanvas = document.getElementById('mainCanvas');
-    const placeholder = document.getElementById('placeholder');
-    const customCursor = document.getElementById('customCursor');
-    const brushPanel = document.getElementById('brush-panel');
-    const cropPanel = document.getElementById('crop-panel');
-    const modeTabs = document.getElementById('mode-tabs');
-    const imageListContainer = document.getElementById('image-list-container');
-    const toolArea = document.getElementById('tool-area');
-    const listingPanel = document.getElementById('listing-panel');
-    const listingPreviewThumb = document.getElementById('listing-preview-thumb');
-    const listingPreviewImg = document.getElementById('listing-preview-img');
-    const listingPreviewArea = document.getElementById('listing-preview-area');
-    const listingPreviews = document.getElementById('listing-previews');
-    const listingExportBtn = document.getElementById('listing-export-btn');
-
-    // 右键随手胶囊
-    const floatingMenu = document.getElementById('floatingMenu');
-    const menuBtns = floatingMenu.querySelectorAll('.menu-btn');
-    const menuUndo = document.getElementById('menuUndo');
-    const menuClear = document.getElementById('menuClear');
+    const fileInput = document.getElementById('fileInput'); const fileInputListing = document.getElementById('fileInputListing'); const uploadAreaStitch = document.getElementById('upload-area-stitch'); const uploadAreaListing = document.getElementById('upload-area-listing'); const imageList = document.getElementById('image-list'); const imageCount = document.getElementById('image-count'); const gapSlider = document.getElementById('gap-slider'); const gapValue = document.getElementById('gap-value'); const brushSlider = document.getElementById('brush-slider'); const brushSizeVal = document.getElementById('brush-size-val'); const undoBtn = document.getElementById('undo-btn'); const clearStrokesBtn = document.getElementById('clear-strokes-btn'); const resetCropBtn = document.getElementById('reset-crop-btn'); const applyCropBtn = document.getElementById('apply-crop-btn'); const exportBtn = document.getElementById('export-btn'); const exportFormat = document.getElementById('export-format'); const exportQuality = document.getElementById('export-quality'); const exportQualityVal = document.getElementById('export-quality-val'); const mainCanvas = document.getElementById('mainCanvas'); const placeholder = document.getElementById('placeholder'); const customCursor = document.getElementById('customCursor'); const brushPanel = document.getElementById('brush-panel'); const cropPanel = document.getElementById('crop-panel'); const modeTabs = document.getElementById('mode-tabs'); const imageListContainer = document.getElementById('image-list-container'); const toolArea = document.getElementById('tool-area'); const listingPanel = document.getElementById('listing-panel'); const listingPreviewThumb = document.getElementById('listing-preview-thumb'); const listingPreviewImg = document.getElementById('listing-preview-img'); const listingPreviewArea = document.getElementById('listing-preview-area'); const listingPreviews = document.getElementById('listing-previews'); const listingExportBtn = document.getElementById('listing-export-btn');
+    const floatingMenu = document.getElementById('floatingMenu'); const menuBtns = floatingMenu.querySelectorAll('.menu-btn'); const menuUndo = document.getElementById('menuUndo'); const menuClear = document.getElementById('menuClear');
 
     function switchTool(tool) {
-      state.activeTool = tool;
-      document.querySelectorAll('.main-tab').forEach(t => {
-        t.classList.remove('active');
-        if (t.dataset.tool === 'listing') t.classList.add('highlight');
-        else t.classList.remove('highlight');
-      });
-      const activeTab = document.querySelector(`.main-tab[data-tool="${tool}"]`);
-      if (activeTab) {
-        activeTab.classList.add('active');
-        if (tool === 'listing') activeTab.classList.remove('highlight');
-      }
-
-      if (tool === 'stitch') {
-        uploadAreaStitch.classList.remove('hidden'); uploadAreaListing.classList.add('hidden');
-        imageListContainer.classList.remove('hidden'); toolArea.classList.remove('hidden');
-        listingPanel.classList.add('hidden'); listingPreviewArea.classList.add('hidden');
-        customCursor.style.display = 'none';
-        if (state.stitchCanvas) { mainCanvas.classList.remove('hidden'); placeholder.classList.add('hidden'); }
-        else { mainCanvas.classList.add('hidden'); placeholder.classList.remove('hidden'); }
-      } else {
-        uploadAreaStitch.classList.add('hidden'); uploadAreaListing.classList.remove('hidden');
-        imageListContainer.classList.add('hidden'); toolArea.classList.add('hidden');
-        listingPanel.classList.remove('hidden'); mainCanvas.classList.add('hidden');
-        customCursor.style.display = 'none';
-        if (state.listingSrc) { placeholder.classList.add('hidden'); listingPreviewThumb.classList.remove('hidden'); listingPreviewArea.classList.remove('hidden'); }
-        else { placeholder.classList.remove('hidden'); listingPreviewThumb.classList.add('hidden'); listingPreviewArea.classList.add('hidden'); }
-        generateListingPreviews();
-      }
+      state.activeTool = tool; document.querySelectorAll('.main-tab').forEach(t => { t.classList.remove('active'); if (t.dataset.tool === 'listing') t.classList.add('highlight'); else t.classList.remove('highlight'); });
+      const activeTab = document.querySelector(`.main-tab[data-tool="${tool}"]`); if (activeTab) { activeTab.classList.add('active'); if (tool === 'listing') activeTab.classList.remove('highlight'); }
+      if (tool === 'stitch') { uploadAreaStitch.classList.remove('hidden'); uploadAreaListing.classList.add('hidden'); imageListContainer.classList.remove('hidden'); toolArea.classList.remove('hidden'); listingPanel.classList.add('hidden'); listingPreviewArea.classList.add('hidden'); customCursor.style.display = 'none'; if (state.stitchCanvas) { mainCanvas.classList.remove('hidden'); placeholder.classList.add('hidden'); } else { mainCanvas.classList.add('hidden'); placeholder.classList.remove('hidden'); } }
+      else { uploadAreaStitch.classList.add('hidden'); uploadAreaListing.classList.remove('hidden'); imageListContainer.classList.add('hidden'); toolArea.classList.add('hidden'); listingPanel.classList.remove('hidden'); mainCanvas.classList.add('hidden'); customCursor.style.display = 'none'; if (state.listingSrc) { placeholder.classList.add('hidden'); listingPreviewThumb.classList.remove('hidden'); listingPreviewArea.classList.remove('hidden'); } else { placeholder.classList.remove('hidden'); listingPreviewThumb.classList.add('hidden'); listingPreviewArea.classList.add('hidden'); } generateListingPreviews(); }
     }
 
     fileInputListing.addEventListener('change', function() { if (this.files && this.files[0] && this.files[0].type.startsWith('image/')) loadListingImage(this.files[0]); this.value = ''; });
-    uploadAreaListing.addEventListener('dragover', e => e.preventDefault());
-    uploadAreaListing.addEventListener('drop', e => { e.preventDefault(); const file = e.dataTransfer?.files?.[0]; if (file?.type?.startsWith('image/')) loadListingImage(file); });
+    uploadAreaListing.addEventListener('dragover', e => e.preventDefault()); uploadAreaListing.addEventListener('drop', e => { e.preventDefault(); const file = e.dataTransfer?.files?.[0]; if (file?.type?.startsWith('image/')) loadListingImage(file); });
 
-    function loadListingImage(file) {
-      const reader = new FileReader();
-      reader.onload = e => {
-        state.listingSrc = e.target.result; const img = new Image();
-        img.onload = () => {
-          state.listingImg = img; listingPreviewImg.src = state.listingSrc;
-          listingPreviewThumb.classList.remove('hidden'); placeholder.classList.add('hidden');
-          listingPreviewArea.classList.remove('hidden'); listingExportBtn.disabled = false;
-          generateListingPreviews();
-        };
-        img.src = state.listingSrc;
-      };
-      reader.readAsDataURL(file);
-    }
-
+    function loadListingImage(file) { const reader = new FileReader(); reader.onload = e => { state.listingSrc = e.target.result; const img = new Image(); img.onload = () => { state.listingImg = img; listingPreviewImg.src = state.listingSrc; listingPreviewThumb.classList.remove('hidden'); placeholder.classList.add('hidden'); listingPreviewArea.classList.remove('hidden'); listingExportBtn.disabled = false; generateListingPreviews(); }; img.src = state.listingSrc; }; reader.readAsDataURL(file); }
     function resetListingImage() { state.listingSrc = null; state.listingImg = null; listingPreviewThumb.classList.add('hidden'); listingPreviewArea.classList.add('hidden'); placeholder.classList.remove('hidden'); listingExportBtn.disabled = true; listingPreviews.innerHTML = ''; }
-    function togglePlatform(platform) {
-      const card = document.querySelector(`.platform-card[data-platform="${platform}"]`); const idx = state.selectedPlatforms.indexOf(platform);
-      if (idx >= 0) { state.selectedPlatforms.splice(idx, 1); card.classList.remove('selected'); }
-      else { state.selectedPlatforms.push(platform); card.classList.add('selected'); }
-      if (state.listingSrc) generateListingPreviews();
-    }
+    function togglePlatform(platform) { const card = document.querySelector(`.platform-card[data-platform="${platform}"]`); const idx = state.selectedPlatforms.indexOf(platform); if (idx >= 0) { state.selectedPlatforms.splice(idx, 1); card.classList.remove('selected'); } else { state.selectedPlatforms.push(platform); card.classList.add('selected'); } if (state.listingSrc) generateListingPreviews(); }
 
-    function generateListingPreviews() {
-      if (!state.listingImg) return; listingPreviews.innerHTML = ''; const allSizes = [];
-      state.selectedPlatforms.forEach(pKey => { PLATFORM_SIZES[pKey].sizes.forEach(s => { allSizes.push({ ...s, platform: PLATFORM_SIZES[pKey].name, pKey }); }); });
-      allSizes.slice(0, 8).forEach(s => {
-        const { canvas, actualW, actualH } = processSize(state.listingImg, s); const url = canvas.toDataURL('image/jpeg', 0.82);
-        const card = document.createElement('div'); card.className = 'bg-white rounded-lg p-2 shadow text-center border border-gray-100';
-        card.innerHTML = `<img src="${url}" class="w-full rounded border" style="max-height:110px;object-fit:contain"><p class="text-xs mt-1 font-bold">${s.platform}</p><p class="text-xs opacity-60">${s.label} ${actualW}×${actualH}</p>`;
-        listingPreviews.appendChild(card);
-      });
-    }
+    function generateListingPreviews() { if (!state.listingImg) return; listingPreviews.innerHTML = ''; const allSizes = []; state.selectedPlatforms.forEach(pKey => { PLATFORM_SIZES[pKey].sizes.forEach(s => { allSizes.push({ ...s, platform: PLATFORM_SIZES[pKey].name, pKey }); }); }); allSizes.slice(0, 8).forEach(s => { const { canvas, actualW, actualH } = processSize(state.listingImg, s); const url = canvas.toDataURL('image/jpeg', 0.82); const card = document.createElement('div'); card.className = 'bg-white rounded-lg p-2 shadow text-center border border-gray-100'; card.innerHTML = `<img src="${url}" class="w-full rounded border" style="max-height:110px;object-fit:contain"><p class="text-xs mt-1 font-bold">${s.platform}</p><p class="text-xs opacity-60">${s.label} ${actualW}×${actualH}</p>`; listingPreviews.appendChild(card); }); }
+    function processSize(img, size) { const cvs = document.createElement('canvas'); let w = size.w, h = size.h === 0 ? Math.round(w / (img.naturalWidth / img.naturalHeight)) : size.h; cvs.width = w; cvs.height = h; const tCtx = cvs.getContext('2d'); if (size.whiteBg || state.listingMode === 'whiteBg') { tCtx.fillStyle = '#FFFFFF'; tCtx.fillRect(0, 0, w, h); const s = Math.min(w / img.naturalWidth, h / img.naturalHeight); const dw = img.naturalWidth * s, dh = img.naturalHeight * s; tCtx.drawImage(img, (w - dw)/2, (h - dh)/2, dw, dh); } else { tCtx.drawImage(img, 0, 0, w, h); } return { canvas: cvs, actualW: w, actualH: h }; }
 
-    function processSize(img, size) {
-      const cvs = document.createElement('canvas'); let w = size.w, h = size.h === 0 ? Math.round(w / (img.naturalWidth / img.naturalHeight)) : size.h;
-      cvs.width = w; cvs.height = h; const tCtx = cvs.getContext('2d');
-      if (size.whiteBg || state.listingMode === 'whiteBg') { tCtx.fillStyle = '#FFFFFF'; tCtx.fillRect(0, 0, w, h); const s = Math.min(w / img.naturalWidth, h / img.naturalHeight); const dw = img.naturalWidth * s, dh = img.naturalHeight * s; tCtx.drawImage(img, (w - dw)/2, (h - dh)/2, dw, dh); }
-      else { tCtx.drawImage(img, 0, 0, w, h); }
-      return { canvas: cvs, actualW: w, actualH: h };
-    }
+    listingExportBtn.addEventListener('click', async () => { if (!state.listingImg) return; listingExportBtn.disabled = true; const zip = new JSZip(); state.selectedPlatforms.forEach(pKey => { const folder = zip.folder(PLATFORM_SIZES[pKey].name); PLATFORM_SIZES[pKey].sizes.forEach(s => { const { canvas } = processSize(state.listingImg, s); folder.file(`${s.label}_${s.w}×${canvas.height}.jpg`, canvas.toDataURL('image/jpeg', 0.92).split(',')[1], { base64: true }); }); }); const blob = await zip.generateAsync({ type: 'blob' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = '修修图_全平台图片包.zip'; a.click(); URL.revokeObjectURL(url); listingExportBtn.disabled = false; });
 
-    listingExportBtn.addEventListener('click', async () => {
-      if (!state.listingImg) return;
-      if (localStorage.getItem('xiuxiutu_vip') !== 'true') {
-        let count = parseInt(localStorage.getItem('xiuxiutu_exportCount') || '0') + 1; localStorage.setItem('xiuxiutu_exportCount', count);
-        if (count >= 5) { document.getElementById('vipOverlay').classList.add('show'); return; }
-      }
-      listingExportBtn.disabled = true; const zip = new JSZip();
-      state.selectedPlatforms.forEach(pKey => {
-        const folder = zip.folder(PLATFORM_SIZES[pKey].name);
-        PLATFORM_SIZES[pKey].sizes.forEach(s => {
-          const { canvas } = processSize(state.listingImg, s);
-          folder.file(`${s.label}_${s.w}×${canvas.height}.jpg`, canvas.toDataURL('image/jpeg', 0.92).split(',')[1], { base64: true });
-        });
-      });
-      const blob = await zip.generateAsync({ type: 'blob' }); const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = '修修图_全平台图片包.zip'; a.click(); URL.revokeObjectURL(url);
-      listingExportBtn.disabled = false;
-    });
-
-    // ==================== 工业级算法：等比横向满格支撑 + 纯白底色闭环 ====================
-    uploadAreaStitch.addEventListener('dragover', e => e.preventDefault());
-    uploadAreaStitch.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer?.files) for (const f of e.dataTransfer.files) if (f.type.startsWith('image/')) loadImageFile(f); });
+    // ==================== 自适应等比撑满算法（纯白背景防漏黑） ====================
+    uploadAreaStitch.addEventListener('dragover', e => e.preventDefault()); uploadAreaStitch.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer?.files) for (const f of e.dataTransfer.files) if (f.type.startsWith('image/')) loadImageFile(f); });
     fileInput.addEventListener('change', function() { if (this.files) for (const f of this.files) if (f.type.startsWith('image/')) loadImageFile(f); this.value = ''; });
 
-    function loadImageFile(file) {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const img = new Image();
-        img.onload = () => { state.images.push({ img, w: img.naturalWidth, h: img.naturalHeight, src: e.target.result }); updateImageList(); performStitch(); };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-
+    function loadImageFile(file) { const reader = new FileReader(); reader.onload = e => { const img = new Image(); img.onload = () => { state.images.push({ img, w: img.naturalWidth, h: img.naturalHeight, src: e.target.result }); updateImageList(); performStitch(); }; img.src = e.target.result; }; reader.readAsDataURL(file); }
     function removeImage(index) { state.images.splice(index, 1); updateImageList(); if (state.images.length) performStitch(); else { state.stitchCanvas = null; state.overlayCanvas = null; hideCanvas(); } }
     function moveImage(index, dir) { const n = index + dir; if (n < 0 || n >= state.images.length) return; [state.images[index], state.images[n]] = [state.images[n], state.images[index]]; updateImageList(); performStitch(); }
     
-    function updateImageList() {
-      imageCount.textContent = state.images.length;
-      imageList.innerHTML = state.images.map((img, i) => `
-        <div class="img-item flex items-center gap-2 p-2 border rounded-lg bg-gray-50">
-          <img src="${img.src}" class="w-10 h-14 object-cover rounded border">
-          <div class="flex-1 min-w-0"><div class="text-xs font-semibold truncate">图 ${i+1}</div><div class="text-xs opacity-60">${img.w}x${img.h}</div></div>
-          <div class="flex gap-1">
-            <button onclick="window._moveImage(${i}, -1)" ${i===0?'disabled':''} class="text-xs px-1.5 py-0.5 rounded bg-gray-200 disabled:opacity-30">▲</button>
-            <button onclick="window._moveImage(${i}, 1)" ${i===state.images.length-1?'disabled':''} class="text-xs px-1.5 py-0.5 rounded bg-gray-200 disabled:opacity-30">▼</button>
-            <button onclick="window._removeImage(${i})" class="text-xs px-1.5 py-0.5 rounded bg-red-100 text-red-600">✕</button>
-          </div>
-        </div>`).join('');
-    }
+    function updateImageList() { imageCount.textContent = state.images.length; imageList.innerHTML = state.images.map((img, i) => `<div class="img-item flex items-center gap-2 p-2 border rounded-lg bg-gray-50"><img src="${img.src}" class="w-10 h-14 object-cover rounded border"><div class="flex-1 min-w-0"><div class="text-xs font-semibold truncate">图 ${i+1}</div><div class="text-xs opacity-60">${img.w}x${img.h}</div></div><div class="flex gap-1"><button onclick="window._moveImage(${i}, -1)" ${i===0?'disabled':''} class="text-xs px-1.5 py-0.5 rounded bg-gray-200 disabled:opacity-30">▲</button><button onclick="window._moveImage(${i}, 1)" ${i===state.images.length-1?'disabled':''} class="text-xs px-1.5 py-0.5 rounded bg-gray-200 disabled:opacity-30">▼</button><button onclick="window._removeImage(${i})" class="text-xs px-1.5 py-0.5 rounded bg-red-100 text-red-600">✕</button></div></div>`).join(''); }
     window._removeImage = removeImage; window._moveImage = moveImage;
 
     gapSlider.addEventListener('input', function() { state.gap = parseInt(this.value); gapValue.textContent = state.gap + 'px'; });
     gapSlider.addEventListener('change', () => { if (state.images.length) performStitch(); });
 
-    // 核心重构核心拼接核心公式：全横向撑满缩放，画布采用纯白底色
     function performStitch() {
       if (!state.images.length) return;
-      
-      // 步骤 A：锁定最高原图宽度作为统一全局基准宽，消除浮点残段
       const maxW = Math.max(...state.images.map(img => img.w));
-      
-      // 步骤 B：精算每一张图等比撑满后的实际高度累加
       let totalH = 0;
       state.images.forEach((img, idx) => {
-        const scale = maxW / img.w;
-        totalH += Math.round(img.h * scale);
+        const scale = maxW / img.w; totalH += Math.round(img.h * scale);
         if (idx < state.images.length - 1) totalH += state.gap;
       });
 
       const cvs = document.createElement('canvas'); cvs.width = maxW; cvs.height = totalH;
       const tCtx = cvs.getContext('2d');
-      
-      // 核心命令：将画布底色彻底染白，100%锁死留空黑边 Bug
-      tCtx.fillStyle = '#FFFFFF';
-      tCtx.fillRect(0, 0, maxW, totalH);
+      tCtx.fillStyle = '#FFFFFF'; tCtx.fillRect(0, 0, maxW, totalH); // 核心锁死纯白底色
 
       let currentY = 0;
       state.images.forEach((img) => {
-        const scale = maxW / img.w;
-        const targetH = Math.round(img.h * scale);
-        tCtx.drawImage(img.img, 0, currentY, maxW, targetH);
-        currentY += targetH + state.gap;
+        const scale = maxW / img.w; const targetH = Math.round(img.h * scale);
+        tCtx.drawImage(img.img, 0, currentY, maxW, targetH); currentY += targetH + state.gap;
       });
 
       state.stitchCanvas = cvs;
@@ -618,7 +434,6 @@
       }
     }
 
-    // 高性能局部增量绘制打码，降维抗掉帧
     function applyStroke(stroke) {
       if (!state.stitchCanvas || !state.overlayCanvas) return;
       const ctx = state.overlayCanvas.getContext('2d'), srcCtx = state.stitchCanvas.getContext('2d');
@@ -635,30 +450,17 @@
         }
         ctx.putImageData(imgData, x, y);
       } else {
-        // GPU加速离屏画布裁剪
-        const scale = 0.12; const srcCanvas = document.createElement('canvas'); srcCanvas.width = sw; srcCanvas.height = sh;
-        srcCanvas.getContext('2d').drawImage(state.stitchCanvas, x, y, sw, sh, 0, 0, sw, sh);
-        const temp = document.createElement('canvas'); const tw = Math.max(4, Math.floor(sw * scale)), th = Math.max(4, Math.floor(sh * scale));
-        temp.width = tw; temp.height = th; const tempCtx = temp.getContext('2d'); tempCtx.imageSmoothingEnabled = true; tempCtx.drawImage(srcCanvas, 0, 0, tw, th);
+        const scale = 0.12; const srcCanvas = document.createElement('canvas'); srcCanvas.width = sw; srcCanvas.height = sh; srcCanvas.getContext('2d').drawImage(state.stitchCanvas, x, y, sw, sh, 0, 0, sw, sh);
+        const temp = document.createElement('canvas'); const tw = Math.max(4, Math.floor(sw * scale)), th = Math.max(4, Math.floor(sh * scale)); temp.width = tw; temp.height = th; const tempCtx = temp.getContext('2d'); tempCtx.imageSmoothingEnabled = true; tempCtx.drawImage(srcCanvas, 0, 0, tw, th);
         ctx.save(); ctx.imageSmoothingEnabled = true; ctx.drawImage(temp, x, y, sw, sh); ctx.restore();
       }
     }
 
     function getCanvasPos(e) { const r = mainCanvas.getBoundingClientRect(); return { x: (e.clientX - r.left) * (mainCanvas.width / r.width), y: (e.clientY - r.top) * (mainCanvas.height / r.height) }; }
-    function updateCustomCursor(e) {
-      if (!state.stitchCanvas || state.mode === 'preview' || state.mode === 'crop') { customCursor.style.display = 'none'; return; }
-      const size = state.brushSize, r = mainCanvas.getBoundingClientRect();
-      customCursor.style.display = 'block'; customCursor.style.width = (size * 2 / (mainCanvas.width / r.width)) + 'px'; customCursor.style.height = (size * 2 / (mainCanvas.height / r.height)) + 'px';
-      customCursor.style.left = e.clientX + 'px'; customCursor.style.top = e.clientY + 'px';
-    }
+    function updateCustomCursor(e) { if (!state.stitchCanvas || state.mode === 'preview' || state.mode === 'crop') { customCursor.style.display = 'none'; return; } const size = state.brushSize, r = mainCanvas.getBoundingClientRect(); customCursor.style.display = 'block'; customCursor.style.width = (size * 2 / (mainCanvas.width / r.width)) + 'px'; customCursor.style.height = (size * 2 / (mainCanvas.height / r.height)) + 'px'; customCursor.style.left = e.clientX + 'px'; customCursor.style.top = e.clientY + 'px'; }
 
-    mainCanvas.addEventListener('mousedown', onPointerDown);
-    mainCanvas.addEventListener('mousemove', function(e) { updateCustomCursor(e); onPointerMove(e); });
-    mainCanvas.addEventListener('mouseup', onPointerUp);
-    mainCanvas.addEventListener('mouseleave', function() { customCursor.style.display = 'none'; onPointerUp(); });
-    mainCanvas.addEventListener('touchstart', e => { e.preventDefault(); onPointerDown(e.touches[0]); });
-    mainCanvas.addEventListener('touchmove', e => { e.preventDefault(); onPointerMove(e.touches[0]); });
-    mainCanvas.addEventListener('touchend', onPointerUp);
+    mainCanvas.addEventListener('mousedown', onPointerDown); mainCanvas.addEventListener('mousemove', function(e) { updateCustomCursor(e); onPointerMove(e); }); mainCanvas.addEventListener('mouseup', onPointerUp); mainCanvas.addEventListener('mouseleave', function() { customCursor.style.display = 'none'; onPointerUp(); });
+    mainCanvas.addEventListener('touchstart', e => { e.preventDefault(); onPointerDown(e.touches[0]); }); mainCanvas.addEventListener('touchmove', e => { e.preventDefault(); onPointerMove(e.touches[0]); }); mainCanvas.addEventListener('touchend', onPointerUp);
 
     function onPointerDown(e) { if (!state.stitchCanvas || state.mode === 'preview') return; const pos = getCanvasPos(e); if (state.mode === 'crop') { handleCropDown(pos); return; } isDrawing = true; lastPos = pos; const stroke = { x: pos.x, y: pos.y, size: state.brushSize, mode: state.mode }; state.strokes.push(stroke); applyStroke(stroke); drawAll(); }
     function onPointerMove(e) { if (!isDrawing && state.mode !== 'crop') return; const pos = getCanvasPos(e); if (state.mode === 'crop') { handleCropMove(pos); drawAll(); return; } if (!isDrawing || state.mode === 'preview') return; if (lastPos) { const dx = pos.x - lastPos.x, dy = pos.y - lastPos.y, dist = Math.hypot(dx, dy); for (let i = Math.max(4, state.brushSize / 2); i < dist; i += Math.max(4, state.brushSize / 2)) { const t = i / dist, stroke = { x: lastPos.x + dx * t, y: lastPos.y + dy * t, size: state.brushSize, mode: state.mode }; state.strokes.push(stroke); applyStroke(stroke); } } const stroke = { x: pos.x, y: pos.y, size: state.brushSize, mode: state.mode }; state.strokes.push(stroke); applyStroke(stroke); lastPos = pos; drawAll(); }
@@ -673,33 +475,23 @@
     undoBtn.addEventListener('click', () => { if (!state.strokes.length) return; state.strokes.pop(); state.overlayCanvas.getContext('2d').clearRect(0, 0, state.overlayCanvas.width, state.overlayCanvas.height); state.strokes.forEach(s => applyStroke(s)); drawAll(); });
     clearStrokesBtn.addEventListener('click', () => { state.strokes = []; state.overlayCanvas.getContext('2d').clearRect(0, 0, state.overlayCanvas.width, state.overlayCanvas.height); drawAll(); });
 
-    document.getElementById('crop-ratios').addEventListener('click', e => {
-      const btn = e.target.closest('.crop-ratio-btn'); if (!btn) return;
-      document.querySelectorAll('.crop-ratio-btn').forEach(b => b.classList.remove('active-ratio', 'bg-indigo-100', 'border-indigo-400'));
-      btn.classList.add('active-ratio', 'bg-indigo-100', 'border-indigo-400'); state.crop.ratio = btn.dataset.ratio;
-      if (state.crop.ratio !== 'free' && state.stitchCanvas) { const [rw, rh] = state.crop.ratio.split(':').map(Number), tr = rw / rh, cw = state.stitchCanvas.width, ch = state.stitchCanvas.height; state.crop.h = state.crop.w / tr; if (state.crop.h > ch * 0.9) { state.crop.h = ch * 0.9; state.crop.w = state.crop.h * tr; } state.crop.x = (cw - state.crop.w) / 2; state.crop.y = (ch - state.crop.h) / 2; } drawAll();
-    });
+    document.getElementById('crop-ratios').addEventListener('click', e => { const btn = e.target.closest('.crop-ratio-btn'); if (!btn) return; document.querySelectorAll('.crop-ratio-btn').forEach(b => b.classList.remove('active-ratio', 'bg-indigo-100', 'border-indigo-400')); btn.classList.add('active-ratio', 'bg-indigo-100', 'border-indigo-400'); state.crop.ratio = btn.dataset.ratio; if (state.crop.ratio !== 'free' && state.stitchCanvas) { const [rw, rh] = state.crop.ratio.split(':').map(Number), tr = rw / rh, cw = state.stitchCanvas.width, ch = state.stitchCanvas.height; state.crop.h = state.crop.w / tr; if (state.crop.h > ch * 0.9) { state.crop.h = ch * 0.9; state.crop.w = state.crop.h * tr; } state.crop.x = (cw - state.crop.w) / 2; state.crop.y = (ch - state.crop.h) / 2; } drawAll(); });
     resetCropBtn.addEventListener('click', () => { if (!state.stitchCanvas) return; const cw = state.stitchCanvas.width, ch = state.stitchCanvas.height; state.crop = { x: cw * 0.05, y: ch * 0.05, w: cw * 0.9, h: ch * 0.9, ratio: 'free', dragging: false, resizing: null }; drawAll(); });
     applyCropBtn.addEventListener('click', () => { if (!state.stitchCanvas) return; const { x, y, w, h } = state.crop; const ns = document.createElement('canvas'); ns.width = w; ns.height = h; ns.getContext('2d').drawImage(state.stitchCanvas, x, y, w, h, 0, 0, w, h); const no = document.createElement('canvas'); no.width = w; no.height = h; no.getContext('2d').drawImage(state.overlayCanvas, x, y, w, h, 0, 0, w, h); state.stitchCanvas = ns; state.overlayCanvas = no; state.strokes = []; state.crop = { x: 0, y: 0, w: 0, h: 0, ratio: 'free', dragging: false, resizing: null }; switchMode('preview'); });
 
     exportFormat.addEventListener('change', function() { state.exportFormat = this.value; });
     exportQuality.addEventListener('input', function() { state.exportQuality = parseInt(this.value); exportQualityVal.textContent = state.exportQuality + '%'; });
     
-    // 导出保护墙
     exportBtn.addEventListener('click', () => {
       if (!state.stitchCanvas) return;
-      if (localStorage.getItem('xiuxiutu_vip') !== 'true') {
-        let count = parseInt(localStorage.getItem('xiuxiutu_exportCount') || '0') + 1; localStorage.setItem('xiuxiutu_exportCount', count);
-        if (count >= 5) { document.getElementById('vipOverlay').classList.add('show'); return; }
-      }
       const ec = document.createElement('canvas'); ec.width = state.stitchCanvas.width; ec.height = state.stitchCanvas.height;
       const ectx = ec.getContext('2d'); ectx.drawImage(state.stitchCanvas, 0, 0); ectx.drawImage(state.overlayCanvas, 0, 0);
       ec.toBlob(blob => { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `xiuxiutu_stitch_${Date.now()}.${state.exportFormat.split('/')[1]}`; a.click(); URL.revokeObjectURL(url); }, state.exportFormat, state.exportQuality / 100);
     });
 
-    // 全画布随手右键胶囊弹出
+    // 右键胶囊菜单交互
     canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); floatingMenu.style.left = (e.clientX + 12) + 'px'; floatingMenu.style.top = (e.clientY + 12) + 'px'; floatingMenu.style.display = 'flex'; menuBtns.forEach(btn => btn.classList.toggle('active-mode', btn.dataset.mode === state.mode)); });
-    menuBtns.forEach(btn => btn.addEventListener('click', function() { if (this.dataset.mode) { switchMode(this.dataset.mode); } floatingMenu.style.display = 'none'; }));
+    menuBtns.forEach(btn => btn.addEventListener('click', function() { if (this.dataset.mode) switchMode(this.dataset.mode); floatingMenu.style.display = 'none'; }));
     menuUndo.addEventListener('click', () => { undoBtn.click(); floatingMenu.style.display = 'none'; });
     menuClear.addEventListener('click', () => { clearStrokesBtn.click(); floatingMenu.style.display = 'none'; });
     floatingMenu.addEventListener('mouseleave', () => floatingMenu.style.display = 'none');
